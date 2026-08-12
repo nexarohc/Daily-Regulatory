@@ -1,409 +1,203 @@
-# 🎉 Daily Regulatory - Complete Working Website
+# Daily Regulatory
 
-## YOU NOW HAVE A FULLY WORKING WEBSITE! ✅
+Global health-authority regulatory intelligence, aggregated from the
+authorities' own published feeds and served behind a registered-customer login.
 
-A production-ready, enterprise-grade platform for global health regulatory intelligence with real-time updates from 200+ authorities worldwide.
-
----
-
-## 📦 WHAT YOU HAVE
-
-You have 7 files that make a complete, working website:
-
-### 1. **server.js** (THE BACKEND)
-- Express.js API server
-- User authentication (register/login)
-- Regulatory updates API
-- Real data from 8 health authorities (FDA, EMA, PMDA, Health Canada, etc.)
-- All API endpoints ready to use
-- **Size:** ~15KB
-
-### 2. **index.html** (THE FRONTEND)
-- Complete website interface
-- Beautiful login/registration page
-- Dashboard with animations
-- Real-time regulatory updates grid
-- Filter by region, type, severity
-- Search functionality
-- Charts and statistics
-- Fully responsive design
-- **Size:** ~35KB
-
-### 3. **package.json** (DEPENDENCIES)
-- Lists all required npm packages
-- Express, JWT, Bcrypt, CORS, etc.
-- Auto-installs with `npm install`
-- **Size:** 2KB
-
-### 4. **.env.example** (CONFIGURATION)
-- Template for environment variables
-- Copy to `.env` and fill in values
-- Stores secrets securely
-- **Size:** <1KB
-
-### 5. **Procfile** (HEROKU DEPLOYMENT)
-- Tells Heroku how to run the app
-- **Size:** <1KB
-
-### 6. **QUICK_START.md** (YOUR GUIDE)
-- 5-minute setup instructions
-- Deploy to Render, Railway, Heroku
-- Local development setup
-- Testing steps
-- **Read this first!**
-
-### 7. **DEPLOYMENT.md** (DETAILED GUIDE)
-- 7 different deployment options
-- AWS EC2, DigitalOcean, Railway, Heroku, Render, Vercel, Netlify
-- Step-by-step instructions for each
-- Troubleshooting guide
-- Security checklist
+Daily Regulatory polls **53 feeds from national and international health
+authorities** on a fixed interval, normalises what they publish (recalls,
+safety alerts, approvals, guidance, enforcement, shortages), auto-tags each
+item by type and severity, and presents it as a single searchable timeline with
+a 3D globe showing where activity is happening.
 
 ---
 
-## 🚀 GET STARTED IN 2 MINUTES
+## What this does and does not do
 
-### **Option A: Deploy to Web (FREE)**
+**It does:** read each authority's own RSS/Atom feed or public API, store what
+it finds, and link every item straight back to the original notice.
 
-#### Deploy to Render.com (Easiest)
-```bash
-# 1. Push files to GitHub
+**It does not:** invent, rewrite, or editorialise regulatory content. Titles and
+summaries come from the authority. Category and severity labels are generated
+by keyword rules and are clearly marked as automatic — they are **not** the
+authority's official classification. Anyone acting on an item is expected to
+open the source link and read the original notice.
 
-# 2. Go to https://render.com
+> This is an aggregator, not a regulatory authority, and nothing it outputs is
+> legal or regulatory advice.
 
-# 3. Connect GitHub → Select repository
+---
 
-# 4. Deploy settings:
-#    - Build: npm install
-#    - Start: node server.js
-#    - Add env: JWT_SECRET=your-secret
+## Quick start
 
-# 5. Click "Create Web Service"
-
-# 6. Wait 3 minutes...
-
-# ✅ Website is LIVE at https://your-app.onrender.com
-```
-
-#### Deploy to Railway.app (Modern)
-```bash
-npm install -g @railway/cli
-railway login
-railway init
-railway up
-# ✅ Website is LIVE
-```
-
-#### Deploy to Heroku
-```bash
-heroku create daily-regulatory
-heroku config:set JWT_SECRET="secret-key"
-git push heroku main
-# ✅ Website is LIVE
-```
-
-### **Option B: Run Locally (ON YOUR COMPUTER)**
+Requires **Node.js 22.5 or newer** (it uses the built-in `node:sqlite` module,
+so there is no native build step and no external database to run).
 
 ```bash
-# 1. Install Node.js from https://nodejs.org
-
-# 2. Create folder
-mkdir daily-regulatory
-cd daily-regulatory
-
-# 3. Copy these 4 files:
-#    - server.js
-#    - index.html
-#    - package.json
-#    - .env (copy from .env.example)
-
-# 4. Install dependencies
 npm install
-
-# 5. Start server
 npm start
-
-# 6. Open browser
-# http://localhost:3000
-
-# ✅ Website is running on your computer!
 ```
 
----
+Then open <http://localhost:3000>, register an account, and you are in the feed.
 
-## 📊 WHAT YOU GET
+Useful commands:
 
-### Built-in Features
-✅ **Real Regulatory Data**
-- FDA (United States)
-- EMA (European Union)
-- PMDA (Japan)
-- Health Canada
-- TGA (Australia)
-- MOH Singapore
-- European Commission
-- FDA Devices
+| Command | What it does |
+| --- | --- |
+| `npm start` | Run the server and poll feeds on an interval |
+| `npm run dev` | Same, with auto-restart on file changes |
+| `npm run probe` | Check every feed endpoint and report which resolve |
+| `npm run ingest` | Run one ingestion cycle and exit (for cron deployments) |
+| `npm run seed` | Load the labelled sample corpus |
+| `npm test` | Run the test suite |
 
-✅ **Complete Authentication**
-- Register new users
-- Secure login with JWT tokens
-- Password encryption with bcrypt
-- Session management
+### Check your feeds first
 
-✅ **Regulatory Updates Dashboard**
-- Real-time updates grid
-- Filter by region (Americas, Europe, Asia, Oceania)
-- Filter by type (Approval, Warning, Recall, Guidance)
-- Filter by severity (Critical, High, Medium, Low)
-- Full-text search
-- Live statistics
-- Authority distribution chart
+Authorities move their feed endpoints when they redesign their sites, and some
+networks block outbound HTTPS. Before trusting the feed, run:
 
-✅ **Professional UI**
-- Modern dark theme
-- Responsive design (desktop, tablet, mobile)
-- Smooth animations
-- Easy navigation
-- Professional colors
-
-✅ **API Endpoints Ready**
-- `POST /api/auth/register` - Register user
-- `POST /api/auth/login` - Login user
-- `GET /api/updates` - Get regulatory updates
-- `GET /api/authorities` - Get health authorities
-- `GET /api/stats` - Get statistics
-- `POST /api/search` - Search updates
-- `GET /api/trending` - Get trending updates
-- `GET /api/health` - Health check
-
----
-
-## 🧪 TEST YOUR WEBSITE
-
-### After Running (Locally or Deployed)
-
-1. **Open in Browser**
-   - Local: http://localhost:3000
-   - Deployed: Your deployment URL
-
-2. **Create Account**
-   - Click "Create one"
-   - Fill in: Name, Email, Password
-   - Click "Create Account"
-
-3. **Login**
-   - Use the email and password you created
-   - Click "Sign In"
-
-4. **Explore Dashboard**
-   - See regulatory updates from 8 authorities
-   - Try filtering by region
-   - Try filtering by update type
-   - Try searching
-   - View statistics
-
-5. **Test Features**
-   - Click on an update card to see details
-   - Change filters to see different updates
-   - Search for specific terms
-   - Check the chart
-
----
-
-## 📁 FILE STRUCTURE
-
-```
-daily-regulatory/
-│
-├── server.js           (Backend API)
-├── index.html          (Frontend Website)
-├── package.json        (Dependencies)
-├── .env.example        (Config template)
-├── .env                (Your config - KEEP SECRET)
-├── Procfile            (Heroku deployment)
-│
-├── README.md           (This file)
-├── QUICK_START.md      (Quick setup guide)
-├── DEPLOYMENT.md       (Detailed deployment guide)
-│
-└── .git/               (Git version control)
+```bash
+npm run probe
 ```
 
+It reports every source as reachable or failing, with the reason and the URL, so
+a moved endpoint is obvious. Narrow it with a filter: `npm run probe -- fda ema`.
+
+The same health data is visible continuously in the admin panel once signed in
+as an administrator.
+
 ---
 
-## 🛠️ CUSTOMIZATION
+## Access control
 
-### Change Website Colors
-Edit `index.html`, find CSS section, change:
-```css
---primary-color: #0ea5e9;  /* Change this to your color */
---secondary-color: #06b6d4;
+The regulatory feed is available only to registered accounts. Specifically:
+
+- **Sessions are server-side.** The cookie carries an opaque id, is `HttpOnly`,
+  `SameSite=Lax`, and `Secure` when `COOKIE_SECURE=1`. There is no token in
+  `localStorage`.
+- **Passwords** are hashed with scrypt (`node:crypto`) using per-user salts, and
+  the stored format records its parameters so they can be raised later.
+- **Every data endpoint refuses anonymous requests** with 401, and `/app` (the
+  dashboard shell) redirects to sign-in rather than merely hiding content in the
+  client.
+- **State-changing requests require a CSRF token** echoed in `X-CSRF-Token`.
+- **Rate limits** apply to sign-in (per address and per IP) and registration.
+- **Suspending an account** immediately destroys its live sessions.
+- A strict **Content-Security-Policy** allows scripts only from this origin;
+  Three.js and Chart.js are vendored locally rather than loaded from a CDN.
+
+Only `/api/health` (liveness) and `/api/public/summary` (how many feeds are
+tracked) are public, and neither exposes regulatory content.
+
+Set `REQUIRE_APPROVAL=1` to hold new registrations in `pending` until an
+administrator approves them. Set `ADMIN_EMAIL` to the address that should be
+promoted to administrator when it registers.
+
+---
+
+## Configuration
+
+Copy `.env.example` to `.env`, or set these in your process environment.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3000` | HTTP port |
+| `DB_FILE` | `data/daily-regulatory.db` | SQLite database location |
+| `SESSION_SECRET` | random | Set in production so restarts do not rotate it |
+| `SESSION_TTL_HOURS` | `12` | Session lifetime |
+| `COOKIE_SECURE` | `0` | Set to `1` behind HTTPS |
+| `POLL_INTERVAL_MINUTES` | `15` | How often each feed is re-checked |
+| `FETCH_TIMEOUT_MS` | `20000` | Per-request timeout |
+| `FETCH_CONCURRENCY` | `6` | Feeds fetched in parallel |
+| `AUTO_INGEST` | `1` | Set `0` to poll externally via `npm run ingest` |
+| `SEED_WHEN_EMPTY` | `1` | Load labelled samples if nothing is reachable |
+| `RETENTION_DAYS` | `180` | Age at which items are pruned (bookmarks kept) |
+| `REQUIRE_APPROVAL` | `0` | Require admin approval for new accounts |
+| `ADMIN_EMAIL` | — | Address promoted to admin on registration |
+| `FEED_USER_AGENT` | see `config.js` | Sent to authorities; put a real contact in it |
+
+---
+
+## How it works
+
+```
+server.js                 Express app, security headers, page + API routing
+server/
+  config.js               Environment configuration
+  db.js                   SQLite schema, migrations, retention
+  auth.js                 Passwords, sessions, CSRF, rate limits, gates
+  routes/
+    auth.js               register / login / logout / me
+    updates.js            feed, stats, authorities, filters, bookmarks (gated)
+    admin.js              feed health, manual poll, user management (admin)
+  ingest/
+    sources.js            The 53-authority registry
+    fetcher.js            Conditional HTTP GET, retries, storage
+    parse.js              RSS 2.0 / RDF / Atom / openFDA parsing
+    classify.js           Category + severity heuristics
+    scheduler.js          Polling loop and offline fallback
+    probe.js              Connectivity check (npm run probe)
+    seed.js               Labelled sample corpus
+public/                   Landing page, styles, client JS, vendored libraries
+views/app.html            Dashboard shell, served only to signed-in accounts
 ```
 
-### Change Website Title
-Edit `index.html`:
-```html
-<title>Your Custom Title Here</title>
+**Ingestion.** Each cycle fetches every enabled source with a bounded number of
+requests in flight, sending `If-None-Match` / `If-Modified-Since` so an unchanged
+feed costs the authority a 304. Items are keyed by a hash of source and GUID, so
+re-polling never duplicates. Undated items are stamped at ingestion rather than
+dropped. Per-source status, error and last-success are recorded for the health
+view.
+
+**The globe.** `public/js/globe.js` renders a dot-matrix Earth in Three.js. The
+continents come from a coarse land mask embedded in the file and subdivided at
+runtime, so the scene needs no image texture and no external asset fetch. Each
+authority is plotted at its coordinates, coloured by activity, and new items
+fire an animated arc. It degrades to a static panel where WebGL is unavailable
+and respects `prefers-reduced-motion`.
+
+---
+
+## When no feed is reachable
+
+If a polling cycle reaches **zero** sources and the database holds no real
+items, the app loads a small **sample corpus** so the interface is explorable
+instead of blank. This is deliberately conspicuous:
+
+- every sample title is prefixed `[SAMPLE]`,
+- every card carries a `sample` tag,
+- a banner across the dashboard states that the data is not live,
+- rows are stored with `is_sample = 1` and are replaced as soon as real items
+  arrive.
+
+The samples describe the *kind* of notice an authority publishes and link to
+that authority's real index page. They never assert that a specific recall,
+approval or alert occurred. Set `SEED_WHEN_EMPTY=0` to disable this entirely.
+
+---
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md). In short: set `SESSION_SECRET` and
+`COOKIE_SECURE=1`, put it behind HTTPS, and give `data/` persistent storage —
+the SQLite file lives there, so an ephemeral filesystem loses accounts and
+history on every restart.
+
+---
+
+## Testing
+
+```bash
+npm test
 ```
 
-### Change Logo/Branding
-Edit in `index.html`:
-```html
-<div class="navbar-brand">Your Brand Name</div>
-```
-
-### Add Real Data
-Edit `server.js`, add more regulatory sources to `REGULATORY_DATABASE` object
-
-### Change Secret Key
-Edit `.env`:
-```
-JWT_SECRET=your-new-super-secret-key-12345
-```
+Covers feed parsing across RSS/RDF/Atom/openFDA, the classification rules, and
+an end-to-end access-control suite that boots the server and asserts anonymous
+requests cannot read regulatory data, administrator endpoints reject ordinary
+customers, CSRF is enforced, and forged session cookies are rejected.
 
 ---
 
-## 🔐 SECURITY NOTES
+## Licence
 
-### Before Going Live
-- [ ] Change `JWT_SECRET` in `.env` to a random strong value
-- [ ] Use HTTPS (all deployment platforms support this)
-- [ ] Don't commit `.env` file to GitHub (add to `.gitignore`)
-- [ ] Keep passwords in `.env` file only
-- [ ] Use environment variables for all secrets
-
-### For Production
-- Add rate limiting
-- Setup CORS properly for your domain
-- Enable logging
-- Monitor API usage
-- Setup error tracking
-- Regular security updates
-
----
-
-## 📈 SCALE UP LATER
-
-### When You Need More:
-
-1. **Add Database**
-   - PostgreSQL for production data
-   - Redis for caching
-
-2. **Add Features**
-   - Email notifications
-   - Webhook integrations
-   - Custom reports
-   - Advanced analytics
-
-3. **Increase Performance**
-   - Add CDN (Cloudflare)
-   - Setup load balancer
-   - Database optimization
-   - API caching
-
-4. **Monetize**
-   - Subscription tiers
-   - API access
-   - Premium features
-   - Enterprise plans
-
----
-
-## ❓ FAQ
-
-### Q: Is this really a working website?
-**A:** Yes! It's fully functional. You can deploy it right now and it works.
-
-### Q: Can I customize it?
-**A:** Yes! The code is yours. Change colors, add data, modify features.
-
-### Q: Will it scale for thousands of users?
-**A:** Currently it uses in-memory storage. For production with thousands of users, add PostgreSQL and Redis (guides included).
-
-### Q: Is it free to deploy?
-**A:** Yes! Render, Railway, Heroku free tier all support Node.js apps.
-
-### Q: Can I add my own regulatory data?
-**A:** Yes! Edit `server.js` and add more authorities to `REGULATORY_DATABASE` object.
-
-### Q: How do I add HTTPS?
-**A:** All cloud platforms (Render, Railway, Heroku, etc.) auto-add HTTPS.
-
-### Q: Can I make it a mobile app?
-**A:** Yes! Use React Native or Flutter to wrap this API.
-
-### Q: Where's the database?
-**A:** Currently uses in-memory. Add PostgreSQL when you go production (guides in DEPLOYMENT.md).
-
----
-
-## 📞 SUPPORT
-
-### Stuck? Here's what to do:
-
-1. **Read QUICK_START.md** - Most questions answered here
-2. **Check DEPLOYMENT.md** - Platform-specific help
-3. **Check browser console** - Press F12, check Console tab for errors
-4. **Check server logs** - See what the backend is doing
-5. **Verify files** - Make sure all 7 files are present
-
----
-
-## 🎯 NEXT STEPS
-
-### Right Now:
-1. ✅ Read QUICK_START.md (5 min read)
-2. ✅ Deploy to Render or Heroku (5 min)
-3. ✅ Test your website (2 min)
-
-### This Week:
-1. Customize the website (colors, branding)
-2. Add your own regulatory data
-3. Share with team members
-4. Get feedback
-
-### This Month:
-1. Add real data sources (FDA, EMA, PMDA)
-2. Setup monitoring
-3. Plan monetization
-4. Add database
-
-### This Quarter:
-1. Grow user base
-2. Add premium features
-3. Scale infrastructure
-4. Launch marketing
-
----
-
-## 🎉 YOU'RE ALL SET!
-
-### What You Have:
-✅ Complete working website
-✅ Professional UI/UX
-✅ Real regulatory data
-✅ Authentication system
-✅ API ready
-✅ Deployment guides
-
-### What's Next:
-Deploy it and start helping people stay compliant with global regulations!
-
----
-
-## 📝 VERSION INFO
-
-- **Platform:** Daily Regulatory
-- **Version:** 1.0.0
-- **Status:** Production Ready
-- **License:** MIT
-- **Created:** 2024
-
----
-
-## 🚀 START HERE:
-
-**Next Action:** Read `QUICK_START.md` for step-by-step deployment instructions.
-
-**Your website is ready. Let's launch it!** 🌟
+MIT. Not affiliated with any regulatory authority. Feed content belongs to the
+issuing authorities and is subject to their terms.

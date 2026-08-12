@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feed — Daily Regulatory</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header class="app-bar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/>
+        </svg>
+      </span>
+      Daily Regulatory
+    </div>
+
+    <div class="who">
+      <span class="live-dot" id="live-indicator" title="Last successful poll">
+        <i></i><span id="live-label">Connecting…</span>
+      </span>
+      <button class="icon-btn" id="refresh-btn" title="Refresh the feed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="refresh-icon">
+          <path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+        </svg>
+        Refresh
+      </button>
+      <span class="avatar" id="avatar" aria-hidden="true">–</span>
+      <span class="name" id="user-name">…</span>
+      <button class="icon-btn" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- Shown only when the feed is running on the offline sample corpus -->
+    <div class="banner hidden" id="sample-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+      </svg>
+      <div>
+        <strong>Showing sample placeholders, not live regulatory data.</strong>
+        No authority feed could be reached from this server, so the interface is
+        populated with clearly-marked placeholders. Every item tagged
+        <span class="tag sample">sample</span> is a stand-in, not a real notice.
+        Run <code>npm run probe</code> to diagnose outbound connectivity.
+      </div>
+    </div>
+
+    <!-- Stat tiles -->
+    <section class="tiles" id="tiles">
+      <div class="tile"><div class="k">Total items</div><div class="v" id="t-total">—</div><div class="s">across all feeds</div></div>
+      <div class="tile"><div class="k">Last 24 hours</div><div class="v" id="t-24h">—</div><div class="s">newly published</div></div>
+      <div class="tile crit"><div class="k">Critical · 7 days</div><div class="v" id="t-critical">—</div><div class="s">auto-classified</div></div>
+      <div class="tile"><div class="k">Live feeds</div><div class="v" id="t-sources">—</div><div class="s" id="t-sources-sub">reachable</div></div>
+    </section>
+
+    <!-- Globe + chart -->
+    <section class="grid-2">
+      <div class="panel" id="globe-panel">
+        <div id="app-globe"></div>
+        <div class="globe-tip" id="globe-tip"><div class="t"></div><div class="d"></div></div>
+        <div class="globe-legend">
+          <span><i style="background:#ff3b5c"></i> Critical activity</span>
+          <span><i style="background:#ff8a3d"></i> High volume</span>
+          <span><i style="background:#ffd166"></i> Moderate</span>
+          <span><i style="background:#4ade80"></i> Light</span>
+          <span><i style="background:#3f7ea8"></i> No items yet</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Publication volume</h3>
+            <div class="sub">Items per day, last 14 days</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div style="height:180px"><canvas id="volume-chart"></canvas></div>
+          <div style="height:170px;margin-top:18px"><canvas id="category-chart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feed -->
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Regulatory feed</h3>
+          <div class="sub" id="feed-count">Loading…</div>
+        </div>
+        <div class="seg" id="view-seg">
+          <button data-view="all" class="on">All</button>
+          <button data-view="critical">Critical</button>
+          <button data-view="bookmarked">Saved</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="filters">
+          <input type="search" id="f-search" placeholder="Search titles, summaries and authorities…" aria-label="Search the feed">
+          <select id="f-region" aria-label="Filter by region"><option value="all">All regions</option></select>
+          <select id="f-category" aria-label="Filter by category"><option value="all">All categories</option></select>
+          <select id="f-severity" aria-label="Filter by severity"><option value="all">All severities</option></select>
+          <select id="f-source" aria-label="Filter by authority"><option value="all">All authorities</option></select>
+        </div>
+
+        <div class="feed" id="feed">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+
+        <div class="load-more hidden" id="load-more-wrap">
+          <button class="btn btn-ghost" id="load-more">Load more</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin: feed health. Rendered only for administrator accounts. -->
+    <section class="panel hidden" id="admin-panel" style="margin-top:20px">
+      <div class="panel-head">
+        <div>
+          <h3>Feed health</h3>
+          <div class="sub">Which authority endpoints are answering</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="poll-now">Poll all feeds now</button>
+      </div>
+      <div class="panel-body scroll-x">
+        <table class="data">
+          <thead>
+            <tr><th></th><th>Source</th><th>Authority</th><th>Region</th><th>Items</th><th>Last status</th><th>Last success</th></tr>
+          </thead>
+          <tbody id="admin-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="faint" style="font-size:12.5px;margin-top:26px;line-height:1.6;max-width:80ch">
+      Category and severity labels are generated automatically from each notice's
+      own wording and are not the authority's official classification. Always
+      open the source link and verify against the original notice before acting.
+    </p>
+
+  </main>
+</div>
+
+<script src="/vendor/chart.umd.js"></script>
+<script type="module" src="/js/dashboard.js"></script>
+</body>
+</html>
