@@ -3,11 +3,22 @@
 Global health-authority regulatory intelligence, aggregated from the
 authorities' own published feeds and served behind a registered-customer login.
 
-Daily Regulatory polls **53 feeds from national and international health
-authorities** on a fixed interval, normalises what they publish (recalls,
-safety alerts, approvals, guidance, enforcement, shortages), auto-tags each
-item by type and severity, and presents it as a single searchable timeline with
-a 3D globe showing where activity is happening.
+Daily Regulatory tracks **205 health authorities across 180 countries and
+territories**, polls the **53 that publish a machine-readable feed** on a
+continuous cycle, normalises what they publish (recalls, safety alerts,
+approvals, guidance, enforcement, shortages), auto-tags each item by type and
+severity, and streams it into a single searchable timeline with a 3D globe
+showing where activity is happening.
+
+New notices are pushed to open dashboards over server-sent events, so the feed
+updates live without a refresh.
+
+**Coverage.** Every country with a recognised medicines regulator is in the
+registry. Authorities that publish a feed are polled; the rest are listed as
+directory entries with a link to their official site, so nothing is silently
+missing from the map. `npm run discover` probes those sites for a feed and
+promotes any that genuinely resolve — coverage grows from what authorities
+actually publish, never from invented URLs.
 
 ---
 
@@ -46,6 +57,7 @@ Useful commands:
 | `npm start` | Run the server and poll feeds on an interval |
 | `npm run dev` | Same, with auto-restart on file changes |
 | `npm run probe` | Check every feed endpoint and report which resolve |
+| `npm run discover` | Probe directory authorities for a feed and promote any found |
 | `npm run ingest` | Run one ingestion cycle and exit (for cron deployments) |
 | `npm run seed` | Load the labelled sample corpus |
 | `npm test` | Run the test suite |
@@ -127,19 +139,26 @@ server/
   auth.js                 Passwords, sessions, CSRF, rate limits, gates
   routes/
     auth.js               register / login / logout / me
-    updates.js            feed, stats, authorities, filters, bookmarks (gated)
+    updates.js            feed, stats, authorities, filters, bookmarks,
+                          live event stream (all gated)
     admin.js              feed health, manual poll, user management (admin)
   ingest/
-    sources.js            The 53-authority registry
+    sources.js            Registry: 53 live feeds + worldwide authority directory
     fetcher.js            Conditional HTTP GET, retries, storage
     parse.js              RSS 2.0 / RDF / Atom / openFDA parsing
     classify.js           Category + severity heuristics
     scheduler.js          Polling loop and offline fallback
     probe.js              Connectivity check (npm run probe)
+    discover.js           Feed discovery for directory authorities
     seed.js               Labelled sample corpus
 public/                   Landing page, styles, client JS, vendored libraries
 views/app.html            Dashboard shell, served only to signed-in accounts
 ```
+
+**Live updates.** `GET /api/stream` is a gated server-sent event stream. Each
+ingestion cycle broadcasts newly stored items, so open dashboards prepend them
+and pulse the globe as they arrive. The client falls back to periodic polling if
+the stream drops.
 
 **Ingestion.** Each cycle fetches every enabled source with a bounded number of
 requests in flight, sending `If-None-Match` / `If-Modified-Since` so an unchanged

@@ -81,16 +81,47 @@ if (strip) {
   ).join('');
 }
 
-// Show the real source count without exposing any regulatory data.
+// The marquee repeats the list twice so the loop is seamless.
+const ticker = document.getElementById('ticker');
+if (ticker) {
+  const chips = [...AUTHORITY_CHIPS, ...AUTHORITY_CHIPS]
+    .map((name) => `<span class="chip">${escapeHtml(name)}</span>`)
+    .join('');
+  ticker.innerHTML = chips;
+}
+
+// Show the real counts without exposing any regulatory data.
 fetch('/api/public/summary')
   .then((r) => (r.ok ? r.json() : null))
   .then((data) => {
     if (!data) return;
-    setText('stat-sources', data.sources);
-    setText('stat-regions', data.regions);
+    countUp('stat-authorities', data.authorities);
+    countUp('stat-countries', data.countries);
+    countUp('stat-sources', data.feeds);
     setText('stat-interval', `${data.pollMinutes} min`);
   })
   .catch(() => {});
+
+/** Small count-up so the hero figures feel live rather than static. */
+function countUp(id, target) {
+  const el = document.getElementById(id);
+  if (!el || !Number.isFinite(target)) return;
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = String(target);
+    return;
+  }
+
+  const duration = 900;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    // Ease out so it decelerates into the final value.
+    el.textContent = String(Math.round(target * (1 - (1 - t) ** 3)));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
 // ---------------------------------------------------------------- tabs
 

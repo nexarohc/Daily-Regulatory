@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
-import { SOURCES } from './ingest/sources.js';
+import { ALL_SOURCES } from './ingest/sources.js';
 
 fs.mkdirSync(path.dirname(config.dbFile), { recursive: true });
 
@@ -103,8 +103,8 @@ CREATE INDEX IF NOT EXISTS idx_login_attempts_key ON login_attempts(key, at);
 export function syncSources() {
   const upsert = db.prepare(`
     INSERT INTO sources (id, authority, agency, country, country_code, region,
-                         lat, lon, site, feed, kind, lang, topic)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         lat, lon, site, feed, kind, lang, topic, enabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       authority = excluded.authority,
       agency = excluded.agency,
@@ -114,21 +114,23 @@ export function syncSources() {
       lat = excluded.lat,
       lon = excluded.lon,
       site = excluded.site,
-      feed = excluded.feed,
       kind = excluded.kind,
       lang = excluded.lang,
       topic = excluded.topic
   `);
+  // `feed` and `enabled` are deliberately not overwritten on conflict: feed
+  // discovery and the admin toggle own those columns once a row exists.
 
-  for (const s of SOURCES) {
+  for (const s of ALL_SOURCES) {
     upsert.run(
       s.id, s.authority, s.agency, s.country, s.countryCode, s.region,
       s.lat, s.lon, s.site, s.feed, s.kind, s.lang, s.topic,
+      s.kind === 'directory' ? 0 : 1,
     );
   }
 
   // Drop sources that are no longer in the registry (cascades to updates).
-  const known = SOURCES.map((s) => s.id);
+  const known = ALL_SOURCES.map((s) => s.id);
   const placeholders = known.map(() => '?').join(',');
   db.prepare(`DELETE FROM sources WHERE id NOT IN (${placeholders})`).run(...known);
 }

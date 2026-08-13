@@ -79,11 +79,22 @@ app.get('/api/health', (_req, res) => {
 // Marketing counts for the public landing page. Deliberately limited to how
 // many feeds are tracked - no regulatory item is readable without an account.
 app.get('/api/public/summary', (_req, res) => {
-  const sources = db.prepare('SELECT COUNT(*) AS n FROM sources').get().n;
+  const authorities = db.prepare('SELECT COUNT(*) AS n FROM sources').get().n;
+  const feeds = db
+    .prepare("SELECT COUNT(*) AS n FROM sources WHERE kind != 'directory' AND feed != ''")
+    .get().n;
   const regions = db.prepare('SELECT COUNT(DISTINCT region) AS n FROM sources').get().n;
+  const countries = db
+    .prepare(
+      "SELECT COUNT(DISTINCT country_code) AS n FROM sources WHERE country_code NOT IN ('INT','EU')",
+    )
+    .get().n;
+
   res.json({
-    sources,
+    authorities,
+    feeds,
     regions,
+    countries,
     pollMinutes: Math.round(config.pollIntervalMs / 60000),
   });
 });

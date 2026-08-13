@@ -8,6 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "probe": "node server/ingest/probe.js",
+    "discover": "node server/ingest/discover.js",
     "ingest": "node server/ingest/run-once.js",
     "seed": "node server/ingest/seed.js",
     "test": "node --test 'test/**/*.test.js'"
@@ -35,6 +36,7 @@
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "playwright": "^1.62.1"
   }
 }

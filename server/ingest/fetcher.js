@@ -200,7 +200,11 @@ export async function withConcurrency(items, limit, worker) {
 
 /** Poll every enabled source once. */
 export async function ingestAll() {
-  const sources = db.prepare('SELECT * FROM sources WHERE enabled = 1').all();
+  // Directory entries have no feed to poll; they exist so the authority is
+  // visible on the map and can be promoted by feed discovery.
+  const sources = db
+    .prepare("SELECT * FROM sources WHERE enabled = 1 AND kind != 'directory' AND feed != ''")
+    .all();
   const started = Date.now();
 
   const results = await withConcurrency(sources, config.fetchConcurrency, fetchSource);

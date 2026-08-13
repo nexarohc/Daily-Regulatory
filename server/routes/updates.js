@@ -2,7 +2,7 @@ import express from 'express';
 import { db, nowIso } from '../db.js';
 import { requireAuth, requireCsrf } from '../auth.js';
 import { CATEGORIES, SEVERITIES } from '../ingest/classify.js';
-import { ingestState } from '../ingest/scheduler.js';
+import { ingestState, ingestEvents } from '../ingest/scheduler.js';
 
 export const updatesRouter = express.Router();
 
@@ -114,6 +114,45 @@ updatesRouter.get('/updates', (req, res) => {
   });
 });
 
+/**
+ * GET /api/stream
+ *
+ * Server-sent events: pushes newly ingested items to the dashboard as they
+ * arrive, so the feed updates continuously without polling or a refresh.
+ * Gated like every other data route.
+ */
+updatesRouter.get('/stream', (req, res) => {
+  res.writeHead(200, {
+    'content-type': 'text/event-stream',
+    'cache-control': 'no-cache, no-transform',
+    connection: 'keep-alive',
+    // Stops proxies such as nginx from buffering the stream.
+    'x-accel-buffering': 'no',
+  });
+
+  const send = (event, data) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  send('ready', { at: new Date().toISOString() });
+
+  const marks = bookmarkSet(req.user.id);
+  const onItems = (rows) => send('items', rows.map((r) => shape(r, marks)));
+  const onCycle = (info) => send('cycle', info);
+
+  ingestEvents.on('items', onItems);
+  ingestEvents.on('cycle', onCycle);
+
+  // Comment frames keep intermediaries from closing an idle connection.
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25_000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    ingestEvents.off('items', onItems);
+    ingestEvents.off('cycle', onCycle);
+  });
+});
+
 updatesRouter.get('/updates/:id', (req, res) => {
   const row = db.prepare(`${SELECT_UPDATE} WHERE u.id = ?`).get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Update not found.' });
@@ -156,10 +195,20 @@ updatesRouter.get('/stats', (req, res) => {
     )
     .all(new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString());
 
+  // "Feeds" are pollable endpoints; "authorities" includes directory entries
+  // that are tracked and mapped but publish no machine-readable feed.
+  const feedsTotal = db
+    .prepare("SELECT COUNT(*) AS n FROM sources WHERE kind != 'directory' AND feed != ''")
+    .get().n;
   const sourcesLive = db
     .prepare('SELECT COUNT(*) AS n FROM sources WHERE last_success_at IS NOT NULL')
     .get().n;
-  const sourcesTotal = db.prepare('SELECT COUNT(*) AS n FROM sources').get().n;
+  const authoritiesTotal = db.prepare('SELECT COUNT(*) AS n FROM sources').get().n;
+  const countries = db
+    .prepare(
+      "SELECT COUNT(DISTINCT country_code) AS n FROM sources WHERE country_code NOT IN ('INT','EU')",
+    )
+    .get().n;
   const sampleCount = db.prepare('SELECT COUNT(*) AS n FROM updates WHERE is_sample = 1').get().n;
 
   res.json({
@@ -167,7 +216,9 @@ updatesRouter.get('/stats', (req, res) => {
     last24h,
     criticalLast7d: critical,
     sourcesLive,
-    sourcesTotal,
+    sourcesTotal: feedsTotal,
+    authoritiesTotal,
+    countries,
     sampleCount,
     usingSampleData: sampleCount > 0 && total === sampleCount,
     lastIngestAt: ingestState.lastRunAt,

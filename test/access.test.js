@@ -86,7 +86,9 @@ test('health and public summary stay reachable without an account', async () => 
   assert.equal(summary.status, 200);
 
   const body = await summary.json();
-  assert.ok(typeof body.sources === 'number');
+  assert.ok(typeof body.authorities === 'number');
+  assert.ok(typeof body.feeds === 'number');
+  assert.ok(body.authorities >= body.feeds);
   // The public summary must expose counts only, never content.
   assert.ok(!('items' in body));
 });

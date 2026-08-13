@@ -46,11 +46,92 @@ async function init() {
     loadAdmin().catch(console.error);
   }
 
-  // Refresh periodically so a long-lived tab keeps up with new publications.
+  connectLiveStream();
+
+  // Backstop for the stream: if the connection is dropped by an intermediary
+  // and does not recover, this still keeps a long-lived tab roughly current.
   setInterval(() => {
     loadStats().catch(() => {});
-    checkForNewItems().catch(() => {});
-  }, 90_000);
+    if (!liveConnected) checkForNewItems().catch(() => {});
+  }, 120_000);
+}
+
+// ------------------------------------------------------------ live stream
+
+let liveConnected = false;
+
+/**
+ * Subscribe to server-sent events so newly published notices appear as they
+ * are ingested, without a refresh.
+ */
+function connectLiveStream() {
+  if (typeof EventSource === 'undefined') return;
+
+  const source = new EventSource('/api/stream');
+
+  source.addEventListener('ready', () => {
+    liveConnected = true;
+    setLive(true, 'Live');
+  });
+
+  source.addEventListener('items', (event) => {
+    let items;
+    try {
+      items = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+
+    const fresh = items.filter((item) => !state.seenIds.has(item.id));
+    if (fresh.length === 0) return;
+
+    for (const item of fresh) {
+      state.seenIds.add(item.id);
+      globe?.pulse(item.source.id);
+    }
+
+    // Only splice into the unfiltered default view so active filters are not
+    // silently contradicted.
+    if (isDefaultView()) {
+      $('feed').insertAdjacentHTML('afterbegin', fresh.map(renderCard).join(''));
+      state.total += fresh.length;
+      $('feed-count').textContent = `${state.total.toLocaleString()} items`;
+    }
+
+    loadStats().catch(() => {});
+  });
+
+  source.addEventListener('cycle', (event) => {
+    try {
+      const info = JSON.parse(event.data);
+      setLive(true, `Live · ${info.reachable}/${info.sources} feeds`);
+    } catch {
+      // ignore malformed frame
+    }
+  });
+
+  source.onerror = () => {
+    liveConnected = false;
+    setLive(false, 'Reconnecting…');
+    // EventSource reconnects on its own; nothing to do here.
+  };
+}
+
+function isDefaultView() {
+  return (
+    state.view === 'all' &&
+    !state.filters.q &&
+    state.filters.region === 'all' &&
+    state.filters.category === 'all' &&
+    state.filters.severity === 'all' &&
+    state.filters.sourceId === 'all'
+  );
+}
+
+function setLive(connected, label) {
+  const indicator = $('live-indicator');
+  indicator?.classList.toggle('stale', !connected);
+  setText('live-label', label);
 }
 
 // ------------------------------------------------------------------ globe
@@ -188,18 +269,24 @@ async function loadStats() {
   setText('t-24h', stats.last24h.toLocaleString());
   setText('t-critical', stats.criticalLast7d.toLocaleString());
   setText('t-sources', `${stats.sourcesLive}/${stats.sourcesTotal}`);
+  setText('t-authorities', String(stats.authoritiesTotal ?? '—'));
+  setText('t-authorities-sub', `${stats.countries ?? 0} countries and territories`);
 
   $('sample-banner').classList.toggle('hidden', !stats.usingSampleData);
 
-  const indicator = $('live-indicator');
-  const label = $('live-label');
-  if (stats.lastIngestAt) {
-    const age = Date.now() - new Date(stats.lastIngestAt).getTime();
-    label.textContent = `Updated ${relativeTime(stats.lastIngestAt)}`;
-    indicator.classList.toggle('stale', age > 60 * 60 * 1000);
-  } else {
-    label.textContent = 'Awaiting first poll';
-    indicator.classList.add('stale');
+  // While the event stream is up it owns the indicator, so we do not overwrite
+  // "Live" with a staler polled timestamp.
+  if (!liveConnected) {
+    const indicator = $('live-indicator');
+    const label = $('live-label');
+    if (stats.lastIngestAt) {
+      const age = Date.now() - new Date(stats.lastIngestAt).getTime();
+      label.textContent = `Updated ${relativeTime(stats.lastIngestAt)}`;
+      indicator.classList.toggle('stale', age > 60 * 60 * 1000);
+    } else {
+      label.textContent = 'Awaiting first poll';
+      indicator.classList.add('stale');
+    }
   }
 
   drawCharts(stats);

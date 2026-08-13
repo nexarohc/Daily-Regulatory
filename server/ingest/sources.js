@@ -823,6 +823,226 @@ export const SOURCES = [
   },
 ];
 
-export const REGIONS = [...new Set(SOURCES.map((s) => s.region))].sort();
+/**
+ * Directory of national medicines / health-product regulators for the rest of
+ * the world.
+ *
+ * Coverage is the point: every country with a recognised regulator is listed,
+ * so nothing is silently missing from the map. Many of these authorities do not
+ * publish a machine-readable feed, so they are registered as `directory`
+ * entries: they appear on the globe and in the authority list with a link to
+ * the official site, but nothing is fetched from them and no content is
+ * invented on their behalf.
+ *
+ * `npm run discover` probes each one for a feed at the conventional locations
+ * and promotes any that genuinely resolve to a live source. That way the list
+ * grows from what the authorities actually publish rather than from guessed
+ * URLs.
+ *
+ * Columns: [id, country, ISO2, agency, authority, region, lat, lon, site]
+ */
+const DIRECTORY = [
+  // ------------------------------------------------------------------ Africa
+  ['dz', 'Algeria', 'DZ', 'ANPP', 'Agence nationale des produits pharmaceutiques', 'Africa', 36.7538, 3.0588, 'https://anpp.dz'],
+  ['ao', 'Angola', 'AO', 'ARMED', 'Agência Reguladora de Medicamentos e Tecnologias de Saúde', 'Africa', -8.839, 13.2894, 'https://armed.gov.ao'],
+  ['bj', 'Benin', 'BJ', 'ABRP', 'Agence Béninoise de Régulation Pharmaceutique', 'Africa', 6.4969, 2.6289, 'https://abrp.bj'],
+  ['bw', 'Botswana', 'BW', 'BOMRA', 'Botswana Medicines Regulatory Authority', 'Africa', -24.6282, 25.9231, 'https://www.bomra.co.bw'],
+  ['bf', 'Burkina Faso', 'BF', 'ANRP', 'Agence Nationale de Régulation Pharmaceutique', 'Africa', 12.3714, -1.5197, 'https://anrp.bf'],
+  ['bi', 'Burundi', 'BI', 'ABREMA', 'Autorité Burundaise de Régulation des Médicaments', 'Africa', -3.3614, 29.3599, 'https://abrema.bi'],
+  ['cv', 'Cabo Verde', 'CV', 'ERIS', 'Entidade Reguladora Independente da Saúde', 'Africa', 14.933, -23.5133, 'https://www.eris.cv'],
+  ['cm', 'Cameroon', 'CM', 'DPML', 'Direction de la Pharmacie, du Médicament et des Laboratoires', 'Africa', 3.848, 11.5021, 'https://www.minsante.cm'],
+  ['cf', 'Central African Republic', 'CF', 'DPML-CF', 'Direction de la Pharmacie et du Médicament', 'Africa', 4.3947, 18.5582, 'https://www.minsante-rca.org'],
+  ['td', 'Chad', 'TD', 'DPLM', 'Direction de la Pharmacie, du Laboratoire et du Médicament', 'Africa', 12.1348, 15.0557, 'https://www.sante-tchad.org'],
+  ['km', 'Comoros', 'KM', 'DNPM', 'Direction Nationale de la Pharmacie et du Médicament', 'Africa', -11.7172, 43.2473, 'https://www.sante.gouv.km'],
+  ['cd', 'DR Congo', 'CD', 'ACOREP', 'Autorité Congolaise de Réglementation Pharmaceutique', 'Africa', -4.4419, 15.2663, 'https://acorep.cd'],
+  ['cg', 'Republic of the Congo', 'CG', 'DPM-CG', 'Direction de la Pharmacie et du Médicament', 'Africa', -4.2634, 15.2429, 'https://sante.gouv.cg'],
+  ['ci', "Côte d'Ivoire", 'CI', 'AIRP', 'Autorité Ivoirienne de Régulation Pharmaceutique', 'Africa', 5.36, -4.0083, 'https://airp.ci'],
+  ['dj', 'Djibouti', 'DJ', 'DPM-DJ', 'Direction de la Pharmacie et du Médicament', 'Africa', 11.5721, 43.1456, 'https://www.sante.gouv.dj'],
+  ['eg', 'Egypt', 'EG', 'EDA', 'Egyptian Drug Authority', 'Africa', 30.0444, 31.2357, 'https://www.edaegypt.gov.eg'],
+  ['gq', 'Equatorial Guinea', 'GQ', 'DGF', 'Dirección General de Farmacia', 'Africa', 3.7523, 8.7742, 'https://guineasalud.org'],
+  ['er', 'Eritrea', 'ER', 'NMFA', 'National Medicines and Food Administration', 'Africa', 15.3229, 38.9251, 'https://www.moh.gov.er'],
+  ['sz', 'Eswatini', 'SZ', 'SZMRA', 'Eswatini Medicines Regulatory Authority', 'Africa', -26.3054, 31.1367, 'https://www.gov.sz'],
+  ['et', 'Ethiopia', 'ET', 'EFDA', 'Ethiopian Food and Drug Authority', 'Africa', 9.032, 38.7469, 'https://www.efda.gov.et'],
+  ['ga', 'Gabon', 'GA', 'DPM-GA', 'Direction du Médicament et de la Pharmacie', 'Africa', 0.4162, 9.4673, 'https://sante.gouv.ga'],
+  ['gm', 'Gambia', 'GM', 'MCA', 'Medicines Control Agency', 'Africa', 13.4549, -16.579, 'https://www.mca.gm'],
+  ['gh', 'Ghana', 'GH', 'FDA Ghana', 'Food and Drugs Authority Ghana', 'Africa', 5.6037, -0.187, 'https://fdaghana.gov.gh'],
+  ['gn', 'Guinea', 'GN', 'DNPM-GN', 'Direction Nationale de la Pharmacie et du Médicament', 'Africa', 9.6412, -13.5784, 'https://sante.gov.gn'],
+  ['gw', 'Guinea-Bissau', 'GW', 'DGF-GW', 'Direcção Geral de Farmácia', 'Africa', 11.8817, -15.6178, 'https://www.mindasaude.gw'],
+  ['ke', 'Kenya', 'KE', 'PPB', 'Pharmacy and Poisons Board', 'Africa', -1.2921, 36.8219, 'https://web.pharmacyboardkenya.org'],
+  ['ls', 'Lesotho', 'LS', 'LMRA', 'Lesotho Medicines Regulatory Authority', 'Africa', -29.3151, 27.4869, 'https://www.health.gov.ls'],
+  ['lr', 'Liberia', 'LR', 'LMHRA', 'Liberia Medicines and Health Products Regulatory Authority', 'Africa', 6.3005, -10.7969, 'https://lmhra.gov.lr'],
+  ['ly', 'Libya', 'LY', 'LMSA', 'Libyan Medicines and Medical Supplies Authority', 'Africa', 32.8872, 13.1913, 'https://ncdc.org.ly'],
+  ['mg', 'Madagascar', 'MG', 'AGMED', 'Agence du Médicament de Madagascar', 'Africa', -18.8792, 47.5079, 'https://www.sante.gov.mg'],
+  ['mw', 'Malawi', 'MW', 'PMRA', 'Pharmacy and Medicines Regulatory Authority', 'Africa', -13.9626, 33.7741, 'https://www.pmra.mw'],
+  ['ml', 'Mali', 'ML', 'ANRP-ML', 'Agence Nationale de Régulation Pharmaceutique', 'Africa', 12.6392, -8.0029, 'https://www.sante.gov.ml'],
+  ['mr', 'Mauritania', 'MR', 'DPL', 'Direction de la Pharmacie et des Laboratoires', 'Africa', 18.0735, -15.9582, 'https://sante.gov.mr'],
+  ['mu', 'Mauritius', 'MU', 'Pharmacy Board', 'Pharmacy Board of Mauritius', 'Africa', -20.1609, 57.5012, 'https://health.govmu.org'],
+  ['ma', 'Morocco', 'MA', 'DMP', 'Direction du Médicament et de la Pharmacie', 'Africa', 34.0209, -6.8416, 'https://www.sante.gov.ma'],
+  ['mz', 'Mozambique', 'MZ', 'ANARME', 'Autoridade Nacional Reguladora de Medicamentos', 'Africa', -25.9692, 32.5732, 'https://www.misau.gov.mz'],
+  ['na', 'Namibia', 'NA', 'NMRC', 'Namibia Medicines Regulatory Council', 'Africa', -22.5609, 17.0658, 'https://nmrc.com.na'],
+  ['ne', 'Niger', 'NE', 'DPHL', 'Direction de la Pharmacie et des Laboratoires', 'Africa', 13.5127, 2.1128, 'https://www.sante.gouv.ne'],
+  ['rw', 'Rwanda', 'RW', 'Rwanda FDA', 'Rwanda Food and Drugs Authority', 'Africa', -1.9441, 30.0619, 'https://www.rwandafda.gov.rw'],
+  ['st', 'São Tomé and Príncipe', 'ST', 'DF-ST', 'Direcção de Farmácia', 'Africa', 0.3302, 6.7333, 'https://www.min-saude.st'],
+  ['sn', 'Senegal', 'SN', 'ARP', 'Agence Sénégalaise de Réglementation Pharmaceutique', 'Africa', 14.7167, -17.4677, 'https://arp.sn'],
+  ['sc', 'Seychelles', 'SC', 'PHA-SC', 'Public Health Authority', 'Africa', -4.6796, 55.492, 'https://www.health.gov.sc'],
+  ['sl', 'Sierra Leone', 'SL', 'PBSL', 'Pharmacy Board of Sierra Leone', 'Africa', 8.4657, -13.2317, 'https://pharmacyboard.gov.sl'],
+  ['so', 'Somalia', 'SO', 'SOMDRA', 'Somali Medicines Regulatory Authority', 'Africa', 2.0469, 45.3182, 'https://moh.gov.so'],
+  ['ss', 'South Sudan', 'SS', 'DFA', 'Drug and Food Control Authority', 'Africa', 4.8594, 31.5713, 'https://moh.gov.ss'],
+  ['sd', 'Sudan', 'SD', 'NMPB', 'National Medicines and Poisons Board', 'Africa', 15.5007, 32.5599, 'https://nmpb.gov.sd'],
+  ['tz', 'Tanzania', 'TZ', 'TMDA', 'Tanzania Medicines and Medical Devices Authority', 'Africa', -6.7924, 39.2083, 'https://www.tmda.go.tz'],
+  ['tg', 'Togo', 'TG', 'DPLM-TG', 'Direction de la Pharmacie, du Laboratoire et du Médicament', 'Africa', 6.1319, 1.2228, 'https://sante.gouv.tg'],
+  ['tn', 'Tunisia', 'TN', 'DPM-TN', 'Direction de la Pharmacie et du Médicament', 'Africa', 36.8065, 10.1815, 'http://www.dpm.tn'],
+  ['ug', 'Uganda', 'UG', 'NDA', 'National Drug Authority', 'Africa', 0.3476, 32.5825, 'https://www.nda.or.ug'],
+  ['zm', 'Zambia', 'ZM', 'ZAMRA', 'Zambia Medicines Regulatory Authority', 'Africa', -15.3875, 28.3228, 'https://www.zamra.co.zm'],
+  ['zw', 'Zimbabwe', 'ZW', 'MCAZ', 'Medicines Control Authority of Zimbabwe', 'Africa', -17.8252, 31.0335, 'https://www.mcaz.co.zw'],
 
-export const sourceById = new Map(SOURCES.map((s) => [s.id, s]));
+  // --------------------------------------------------------- North America
+  ['gt', 'Guatemala', 'GT', 'DRACES', 'Departamento de Regulación y Control de Productos Farmacéuticos', 'North America', 14.6349, -90.5069, 'https://www.mspas.gob.gt'],
+  ['bz', 'Belize', 'BZ', 'MOHW-BZ', 'Ministry of Health and Wellness', 'North America', 17.5046, -88.1962, 'https://www.health.gov.bz'],
+  ['sv', 'El Salvador', 'SV', 'DNM', 'Dirección Nacional de Medicamentos', 'North America', 13.6929, -89.2182, 'https://www.medicamentos.gob.sv'],
+  ['hn', 'Honduras', 'HN', 'ARSA', 'Agencia de Regulación Sanitaria', 'North America', 14.0723, -87.1921, 'https://www.arsa.gob.hn'],
+  ['ni', 'Nicaragua', 'NI', 'DGRS', 'Dirección General de Regulación Sanitaria', 'North America', 12.115, -86.2362, 'https://www.minsa.gob.ni'],
+  ['cr', 'Costa Rica', 'CR', 'DRPIS', 'Dirección de Regulación de Productos de Interés Sanitario', 'North America', 9.9281, -84.0907, 'https://www.ministeriodesalud.go.cr'],
+  ['pa', 'Panama', 'PA', 'DNFD', 'Dirección Nacional de Farmacia y Drogas', 'North America', 8.9824, -79.5199, 'https://www.minsa.gob.pa'],
+  ['cu', 'Cuba', 'CU', 'CECMED', 'Centro para el Control Estatal de Medicamentos y Dispositivos Médicos', 'North America', 23.1136, -82.3666, 'https://www.cecmed.cu'],
+  ['do', 'Dominican Republic', 'DO', 'DIGEMAPS', 'Dirección General de Medicamentos, Alimentos y Productos Sanitarios', 'North America', 18.4861, -69.9312, 'https://www.msp.gob.do'],
+  ['ht', 'Haiti', 'HT', 'DPMMT', 'Direction de la Pharmacie, du Médicament et de la Médecine Traditionnelle', 'North America', 18.5944, -72.3074, 'https://www.mspp.gouv.ht'],
+  ['jm', 'Jamaica', 'JM', 'MOHW-JM', 'Ministry of Health and Wellness - Standards and Regulation', 'North America', 17.9714, -76.7931, 'https://www.moh.gov.jm'],
+  ['tt', 'Trinidad and Tobago', 'TT', 'CDD', 'Chemistry, Food and Drugs Division', 'North America', 10.6549, -61.5019, 'https://health.gov.tt'],
+  ['bb', 'Barbados', 'BB', 'BDS-DS', 'Barbados Drug Service', 'North America', 13.1132, -59.5988, 'https://www.health.gov.bb'],
+  ['bs', 'Bahamas', 'BS', 'BNDA', 'Bahamas National Drug Agency', 'North America', 25.0443, -77.3504, 'https://www.bnda.gov.bs'],
+
+  // --------------------------------------------------------- South America
+  ['gy', 'Guyana', 'GY', 'GA-FDD', 'Government Analyst - Food and Drug Department', 'South America', 6.8013, -58.1551, 'https://gafdd.gov.gy'],
+  ['sr', 'Suriname', 'SR', 'MOH-SR', 'Ministerie van Volksgezondheid', 'South America', 5.852, -55.2038, 'https://gov.sr'],
+  ['ve', 'Venezuela', 'VE', 'INHRR', 'Instituto Nacional de Higiene Rafael Rangel', 'South America', 10.4806, -66.9036, 'http://www.inhrr.gob.ve'],
+  ['ec', 'Ecuador', 'EC', 'ARCSA', 'Agencia Nacional de Regulación, Control y Vigilancia Sanitaria', 'South America', -0.1807, -78.4678, 'https://www.controlsanitario.gob.ec'],
+  ['pe', 'Peru', 'PE', 'DIGEMID', 'Dirección General de Medicamentos, Insumos y Drogas', 'South America', -12.0464, -77.0428, 'https://www.digemid.minsa.gob.pe'],
+  ['bo', 'Bolivia', 'BO', 'AGEMED', 'Agencia Estatal de Medicamentos y Tecnologías en Salud', 'South America', -16.4897, -68.1193, 'https://www.minsalud.gob.bo'],
+  ['py', 'Paraguay', 'PY', 'DINAVISA', 'Dirección Nacional de Vigilancia Sanitaria', 'South America', -25.2637, -57.5759, 'https://www.dinavisa.gov.py'],
+  ['uy', 'Uruguay', 'UY', 'MSP-UY', 'Ministerio de Salud Pública - Medicamentos', 'South America', -34.9011, -56.1645, 'https://www.gub.uy/ministerio-salud-publica'],
+  ['cl', 'Chile', 'CL', 'ISP', 'Instituto de Salud Pública de Chile', 'South America', -33.4489, -70.6693, 'https://www.ispch.gob.cl'],
+
+  // ------------------------------------------------------------------ Europe
+  ['at', 'Austria', 'AT', 'BASG', 'Bundesamt für Sicherheit im Gesundheitswesen', 'Europe', 48.2082, 16.3738, 'https://www.basg.gv.at'],
+  ['bg', 'Bulgaria', 'BG', 'BDA', 'Bulgarian Drug Agency', 'Europe', 42.6977, 23.3219, 'https://www.bda.bg'],
+  ['hr', 'Croatia', 'HR', 'HALMED', 'Agency for Medicinal Products and Medical Devices', 'Europe', 45.815, 15.9819, 'https://www.halmed.hr'],
+  ['cy', 'Cyprus', 'CY', 'PS-CY', 'Pharmaceutical Services', 'Europe', 35.1856, 33.3823, 'https://www.moh.gov.cy'],
+  ['cz', 'Czechia', 'CZ', 'SÚKL', 'Státní ústav pro kontrolu léčiv', 'Europe', 50.0755, 14.4378, 'https://www.sukl.cz'],
+  ['ee', 'Estonia', 'EE', 'Ravimiamet', 'State Agency of Medicines', 'Europe', 59.437, 24.7536, 'https://www.ravimiamet.ee'],
+  ['gr', 'Greece', 'GR', 'EOF', 'National Organization for Medicines', 'Europe', 37.9838, 23.7275, 'https://www.eof.gr'],
+  ['hu', 'Hungary', 'HU', 'OGYÉI', 'National Institute of Pharmacy and Nutrition', 'Europe', 47.4979, 19.0402, 'https://ogyei.gov.hu'],
+  ['is', 'Iceland', 'IS', 'IMA', 'Icelandic Medicines Agency', 'Europe', 64.1466, -21.9426, 'https://www.lyfjastofnun.is'],
+  ['lv', 'Latvia', 'LV', 'ZVA', 'State Agency of Medicines of Latvia', 'Europe', 56.9496, 24.1052, 'https://www.zva.gov.lv'],
+  ['lt', 'Lithuania', 'LT', 'VVKT', 'State Medicines Control Agency', 'Europe', 54.6872, 25.2797, 'https://www.vvkt.lt'],
+  ['lu', 'Luxembourg', 'LU', 'MS-LU', 'Ministère de la Santé - Division de la Pharmacie', 'Europe', 49.6116, 6.1319, 'https://sante.public.lu'],
+  ['mt', 'Malta', 'MT', 'MMA', 'Malta Medicines Authority', 'Europe', 35.8989, 14.5146, 'https://www.medicinesauthority.gov.mt'],
+  ['pl', 'Poland', 'PL', 'URPL', 'Office for Registration of Medicinal Products', 'Europe', 52.2297, 21.0122, 'https://urpl.gov.pl'],
+  ['pt', 'Portugal', 'PT', 'INFARMED', 'Autoridade Nacional do Medicamento e Produtos de Saúde', 'Europe', 38.7223, -9.1393, 'https://www.infarmed.pt'],
+  ['ro', 'Romania', 'RO', 'ANMDMR', 'National Agency for Medicines and Medical Devices', 'Europe', 44.4268, 26.1025, 'https://www.anm.ro'],
+  ['sk', 'Slovakia', 'SK', 'ŠÚKL', 'State Institute for Drug Control', 'Europe', 48.1486, 17.1077, 'https://www.sukl.sk'],
+  ['si', 'Slovenia', 'SI', 'JAZMP', 'Agency for Medicinal Products and Medical Devices', 'Europe', 46.0569, 14.5058, 'https://www.jazmp.si'],
+  ['ua', 'Ukraine', 'UA', 'SEC-UA', 'State Expert Center of the Ministry of Health', 'Europe', 50.4501, 30.5234, 'https://www.dec.gov.ua'],
+  ['rs', 'Serbia', 'RS', 'ALIMS', 'Medicines and Medical Devices Agency of Serbia', 'Europe', 44.7866, 20.4489, 'https://www.alims.gov.rs'],
+  ['ba', 'Bosnia and Herzegovina', 'BA', 'ALMBIH', 'Agency for Medicinal Products and Medical Devices', 'Europe', 43.8563, 18.4131, 'https://www.almbih.gov.ba'],
+  ['mk', 'North Macedonia', 'MK', 'MALMED', 'Agency for Medicines and Medical Devices', 'Europe', 41.9981, 21.4254, 'https://www.malmed.gov.mk'],
+  ['al', 'Albania', 'AL', 'AKBPM', 'National Agency for Medicines and Medical Devices', 'Europe', 41.3275, 19.8187, 'https://akbpm.gov.al'],
+  ['me', 'Montenegro', 'ME', 'CALIMS', 'Institute for Medicines and Medical Devices', 'Europe', 42.4304, 19.2594, 'https://www.calims.me'],
+  ['md', 'Moldova', 'MD', 'AMDM', 'Agency for Medicines and Medical Devices', 'Europe', 47.0105, 28.8638, 'https://amdm.gov.md'],
+  ['by', 'Belarus', 'BY', 'RCEIM', 'Centre for Examinations and Tests in Health Service', 'Europe', 53.9006, 27.559, 'https://www.rceth.by'],
+  ['ru', 'Russia', 'RU', 'Roszdravnadzor', 'Federal Service for Surveillance in Healthcare', 'Europe', 55.7558, 37.6173, 'https://roszdravnadzor.gov.ru'],
+  ['ge', 'Georgia', 'GE', 'RAMP-GE', 'Regulation Agency for Medical and Pharmaceutical Activities', 'Europe', 41.7151, 44.8271, 'https://www.rama.moh.gov.ge'],
+  ['am', 'Armenia', 'AM', 'SCDMTE', 'Scientific Centre of Drug and Medical Technology Expertise', 'Europe', 40.1792, 44.4991, 'https://www.pharm.am'],
+  ['az', 'Azerbaijan', 'AZ', 'AEC-AZ', 'Analytical Expertise Centre', 'Europe', 40.4093, 49.8671, 'https://www.pharma.az'],
+
+  // -------------------------------------------------------------------- Asia
+  ['cn', 'China', 'CN', 'NMPA', 'National Medical Products Administration', 'Asia', 39.9042, 116.4074, 'https://www.nmpa.gov.cn'],
+  ['mn', 'Mongolia', 'MN', 'MEDA', 'Medicines and Medical Devices Regulatory Department', 'Asia', 47.8864, 106.9057, 'https://www.mohs.mn'],
+  ['pk', 'Pakistan', 'PK', 'DRAP', 'Drug Regulatory Authority of Pakistan', 'Asia', 33.6844, 73.0479, 'https://www.dra.gov.pk'],
+  ['bd', 'Bangladesh', 'BD', 'DGDA', 'Directorate General of Drug Administration', 'Asia', 23.8103, 90.4125, 'https://dgda.gov.bd'],
+  ['lk', 'Sri Lanka', 'LK', 'NMRA-LK', 'National Medicines Regulatory Authority', 'Asia', 6.9271, 79.8612, 'https://nmra.gov.lk'],
+  ['np', 'Nepal', 'NP', 'DDA', 'Department of Drug Administration', 'Asia', 27.7172, 85.324, 'https://www.dda.gov.np'],
+  ['bt', 'Bhutan', 'BT', 'BFDA', 'Bhutan Food and Drug Authority', 'Asia', 27.4728, 89.639, 'https://www.bfda.gov.bt'],
+  ['mv', 'Maldives', 'MV', 'MFDA', 'Maldives Food and Drug Authority', 'Asia', 4.1755, 73.5093, 'https://www.health.gov.mv'],
+  ['af', 'Afghanistan', 'AF', 'NMHRA', 'National Medicine and Healthcare Products Regulatory Authority', 'Asia', 34.5553, 69.2075, 'https://moph.gov.af'],
+  ['mm', 'Myanmar', 'MM', 'FDA Myanmar', 'Food and Drug Administration', 'Asia', 16.8661, 96.1951, 'https://www.fda.gov.mm'],
+  ['th', 'Thailand', 'TH', 'Thai FDA', 'Food and Drug Administration Thailand', 'Asia', 13.7563, 100.5018, 'https://www.fda.moph.go.th'],
+  ['la', 'Laos', 'LA', 'FDD-LA', 'Food and Drug Department', 'Asia', 17.9757, 102.6331, 'https://www.fdd.gov.la'],
+  ['kh', 'Cambodia', 'KH', 'DDF', 'Department of Drugs and Food', 'Asia', 11.5564, 104.9282, 'https://www.ddfcambodia.com'],
+  ['vn', 'Vietnam', 'VN', 'DAV', 'Drug Administration of Vietnam', 'Asia', 21.0285, 105.8542, 'https://dav.gov.vn'],
+  ['id', 'Indonesia', 'ID', 'BPOM', 'Badan Pengawas Obat dan Makanan', 'Asia', -6.2088, 106.8456, 'https://www.pom.go.id'],
+  ['bn', 'Brunei', 'BN', 'BDMCA', 'Brunei Darussalam Medicines Control Authority', 'Asia', 4.9031, 114.9398, 'https://www.moh.gov.bn'],
+  ['tl', 'Timor-Leste', 'TL', 'DNF-TL', 'Direcção Nacional de Farmácia e Medicamentos', 'Asia', -8.5569, 125.5603, 'https://www.moh.gov.tl'],
+  ['kz', 'Kazakhstan', 'KZ', 'NCELS', 'National Center for Expertise of Medicines', 'Asia', 51.1694, 71.4491, 'https://www.ndda.kz'],
+  ['uz', 'Uzbekistan', 'UZ', 'AQSAM', 'Agency for the Development of the Pharmaceutical Industry', 'Asia', 41.2995, 69.2401, 'https://www.uzpharm-control.uz'],
+  ['kg', 'Kyrgyzstan', 'KG', 'DDMT', 'Department of Drug Provision and Medical Equipment', 'Asia', 42.8746, 74.5698, 'https://www.pharm.kg'],
+  ['tj', 'Tajikistan', 'TJ', 'SSSMEP', 'State Service for Supervision of Medical Activities', 'Asia', 38.5598, 68.787, 'https://www.moh.tj'],
+  ['tm', 'Turkmenistan', 'TM', 'SCMSM', 'State Centre for Medicines Standardisation', 'Asia', 37.9601, 58.3261, 'https://www.saglykhm.gov.tm'],
+  ['mo', 'Macao SAR', 'MO', 'ISAF', 'Instituto para a Supervisão e Administração Farmacêutica', 'Asia', 22.1987, 113.5439, 'https://www.isaf.gov.mo'],
+
+  // ------------------------------------------------------------- Middle East
+  ['ae', 'United Arab Emirates', 'AE', 'MOHAP', 'Ministry of Health and Prevention', 'Middle East', 24.4539, 54.3773, 'https://mohap.gov.ae'],
+  ['qa', 'Qatar', 'QA', 'DPGD', 'Department of Pharmacy and Drug Control', 'Middle East', 25.2854, 51.531, 'https://www.moph.gov.qa'],
+  ['kw', 'Kuwait', 'KW', 'KDFC', 'Drug and Food Control Administration', 'Middle East', 29.3759, 47.9774, 'https://www.moh.gov.kw'],
+  ['bh', 'Bahrain', 'BH', 'NHRA', 'National Health Regulatory Authority', 'Middle East', 26.2285, 50.586, 'https://www.nhra.bh'],
+  ['om', 'Oman', 'OM', 'DGPADC', 'Directorate General of Pharmaceutical Affairs and Drug Control', 'Middle East', 23.588, 58.3829, 'https://www.moh.gov.om'],
+  ['ye', 'Yemen', 'YE', 'SBDMA', 'Supreme Board of Drugs and Medical Appliances', 'Middle East', 15.3694, 44.191, 'https://sbd-ye.org'],
+  ['iq', 'Iraq', 'IQ', 'IQ-MOH', 'Ministry of Health - Directorate of Technical Affairs', 'Middle East', 33.3152, 44.3661, 'https://moh.gov.iq'],
+  ['ir', 'Iran', 'IR', 'IFDA', 'Iran Food and Drug Administration', 'Middle East', 35.6892, 51.389, 'https://www.fda.gov.ir'],
+  ['jo', 'Jordan', 'JO', 'JFDA', 'Jordan Food and Drug Administration', 'Middle East', 31.9454, 35.9284, 'https://www.jfda.jo'],
+  ['lb', 'Lebanon', 'LB', 'MOPH-LB', 'Ministry of Public Health - Pharmaceutical Directorate', 'Middle East', 33.8938, 35.5018, 'https://www.moph.gov.lb'],
+  ['sy', 'Syria', 'SY', 'SY-MOH', 'Ministry of Health - Directorate of Pharmaceutical Affairs', 'Middle East', 33.5138, 36.2765, 'http://www.moh.gov.sy'],
+  ['il', 'Israel', 'IL', 'IL-MOH', 'Ministry of Health - Pharmaceutical Administration', 'Middle East', 31.7683, 35.2137, 'https://www.gov.il/en/departments/ministry_of_health'],
+  ['ps', 'Palestine', 'PS', 'PS-MOH', 'Ministry of Health - General Directorate of Pharmacy', 'Middle East', 31.9038, 35.2034, 'https://www.moh.gov.ps'],
+
+  // ---------------------------------------------------------------- Oceania
+  ['fj', 'Fiji', 'FJ', 'FPBS', 'Fiji Pharmaceutical and Biomedical Services', 'Oceania', -18.1416, 178.4419, 'https://www.health.gov.fj'],
+  ['pg', 'Papua New Guinea', 'PG', 'MSAB', 'Medical Supplies and Advisory Board', 'Oceania', -9.4438, 147.1803, 'https://www.health.gov.pg'],
+  ['ws', 'Samoa', 'WS', 'WS-MOH', 'Ministry of Health - Pharmaceutical Services', 'Oceania', -13.8507, -171.7514, 'https://www.health.gov.ws'],
+  ['sb', 'Solomon Islands', 'SB', 'NMS-SB', 'National Medical Stores', 'Oceania', -9.4456, 159.9729, 'https://solomons.gov.sb'],
+  ['vu', 'Vanuatu', 'VU', 'VU-MOH', 'Ministry of Health - Pharmacy Unit', 'Oceania', -17.7334, 168.3273, 'https://moh.gov.vu'],
+  ['to', 'Tonga', 'TO', 'TO-MOH', 'Ministry of Health - Pharmacy Division', 'Oceania', -21.1393, -175.2018, 'https://www.health.gov.to'],
+
+  // ---------------------------------------------------- International bodies
+  ['imdrf', 'International', 'INT', 'IMDRF', 'International Medical Device Regulators Forum', 'Global', 46.2044, 6.1432, 'https://www.imdrf.org'],
+  ['pics', 'International', 'INT', 'PIC/S', 'Pharmaceutical Inspection Co-operation Scheme', 'Global', 46.2044, 6.1432, 'https://picscheme.org'],
+  ['icmra', 'International', 'INT', 'ICMRA', 'International Coalition of Medicines Regulatory Authorities', 'Global', 46.2044, 6.1432, 'https://www.icmra.info'],
+  ['ama-africa', 'Africa', 'INT', 'AMA', 'African Medicines Agency', 'Africa', -1.9441, 30.0619, 'https://au.int'],
+  ['paho', 'International', 'INT', 'PAHO', 'Pan American Health Organization', 'North America', 38.9072, -77.0369, 'https://www.paho.org'],
+];
+
+/**
+ * Directory rows become sources with no feed. They are disabled for fetching
+ * until `npm run discover` finds a real feed for them.
+ */
+const DIRECTORY_SOURCES = DIRECTORY.map(
+  ([id, country, countryCode, agency, authority, region, lat, lon, site]) => ({
+    id: `dir-${id}`,
+    authority,
+    agency,
+    country,
+    countryCode,
+    region,
+    lat,
+    lon,
+    site,
+    feed: '',
+    kind: 'directory',
+    lang: '',
+    topic: 'Official site - no feed registered yet',
+  }),
+);
+
+/** Every authority the platform tracks: live feeds plus the directory. */
+export const ALL_SOURCES = [...SOURCES, ...DIRECTORY_SOURCES];
+
+export const REGIONS = [...new Set(ALL_SOURCES.map((s) => s.region))].sort();
+
+export const sourceById = new Map(ALL_SOURCES.map((s) => [s.id, s]));
+
+/** Count of distinct countries and territories represented. */
+export const COUNTRY_COUNT = new Set(
+  ALL_SOURCES.filter((s) => s.countryCode !== 'INT' && s.countryCode !== 'EU').map(
+    (s) => s.countryCode,
+  ),
+).size;

@@ -29,27 +29,31 @@
 
   <div class="wrap hero-body">
     <div class="hero-copy">
-      <p class="eyebrow">Global regulatory intelligence</p>
-      <h1>Every health authority.<br><span class="grad">One daily feed.</span></h1>
+      <p class="eyebrow"><span class="pulse-dot"></span> Global regulatory intelligence</p>
+      <h1><span class="grad">Live Update</span><br>from every Health Authority</h1>
       <p class="lede">
         Daily Regulatory continuously polls the published feeds of national and
         international health authorities — recalls, safety alerts, approvals,
-        guidance and enforcement — and puts them in a single monitored timeline
-        with the source always one click away.
+        guidance and enforcement — and streams them into a single monitored
+        timeline, with the source always one click away.
       </p>
 
       <div class="hero-stats">
         <div class="hero-stat">
+          <div class="n" id="stat-authorities">—</div>
+          <div class="l">Authorities tracked</div>
+        </div>
+        <div class="hero-stat">
+          <div class="n" id="stat-countries">—</div>
+          <div class="l">Countries covered</div>
+        </div>
+        <div class="hero-stat">
           <div class="n" id="stat-sources">—</div>
-          <div class="l">Authority feeds</div>
+          <div class="l">Live feeds</div>
         </div>
         <div class="hero-stat">
-          <div class="n" id="stat-regions">8</div>
-          <div class="l">World regions</div>
-        </div>
-        <div class="hero-stat">
-          <div class="n" id="stat-interval">15 min</div>
-          <div class="l">Polling interval</div>
+          <div class="n" id="stat-interval">—</div>
+          <div class="l">Refresh cycle</div>
         </div>
       </div>
     </div>
@@ -112,6 +116,14 @@
     </div>
   </div>
 </header>
+
+<!-- Live status strip -->
+<section class="live-strip">
+  <div class="wrap inner">
+    <span class="label"><span class="pulse-dot"></span> Monitoring now</span>
+    <div class="agencies"><div class="track" id="ticker"></div></div>
+  </div>
+</section>
 
 <!-- ------------------------------------------------------------ features -->
 <section class="section">

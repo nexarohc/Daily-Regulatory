@@ -1,7 +1,16 @@
+import { EventEmitter } from 'node:events';
 import { config } from '../config.js';
 import { db, pruneEphemeral, pruneOldUpdates } from '../db.js';
 import { ingestAll } from './fetcher.js';
 import { loadSampleCorpus } from './seed.js';
+
+/**
+ * Broadcasts ingestion activity so connected dashboards can update live
+ * instead of waiting for a refresh. Listeners are SSE connections.
+ */
+export const ingestEvents = new EventEmitter();
+// One listener per open dashboard tab; lift the default cap accordingly.
+ingestEvents.setMaxListeners(0);
 
 let timer = null;
 let running = false;
@@ -19,9 +28,37 @@ export async function runIngestCycle({ verbose = true } = {}) {
   ingestState.running = true;
 
   try {
+    // Note the high-water mark so we can tell listeners exactly what is new.
+    const before = db.prepare('SELECT MAX(rowid) AS mark FROM updates').get().mark ?? 0;
+
     const result = await ingestAll();
     ingestState.lastRunAt = new Date().toISOString();
     ingestState.lastResult = result;
+
+    if (result.inserted > 0) {
+      const fresh = db
+        .prepare(
+          `SELECT u.id, u.title, u.summary, u.link, u.published_at, u.category,
+                  u.severity, u.is_sample,
+                  s.id AS source_id, s.authority, s.agency, s.country,
+                  s.country_code, s.region, s.site, s.topic, s.lat, s.lon
+             FROM updates u
+             JOIN sources s ON s.id = u.source_id
+            WHERE u.rowid > ?
+            ORDER BY u.published_at DESC
+            LIMIT 40`,
+        )
+        .all(before);
+
+      if (fresh.length > 0) ingestEvents.emit('items', fresh);
+    }
+
+    ingestEvents.emit('cycle', {
+      at: ingestState.lastRunAt,
+      reachable: result.ok,
+      sources: result.sources,
+      inserted: result.inserted,
+    });
 
     if (verbose) {
       console.log(

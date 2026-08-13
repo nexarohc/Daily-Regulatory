@@ -16,6 +16,7 @@
 
   --accent: #22d3ee;
   --accent-2: #8b5cf6;
+  --accent-3: #f472b6;
   --accent-glow: rgba(34, 211, 238, 0.35);
 
   --critical: #ff3b5c;
@@ -102,6 +103,42 @@ h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -0.02em; }
   overflow: hidden;
 }
 
+/* Aurora wash behind the globe: three slow-drifting colour blooms that give
+   the hero depth without competing with the 3D layer. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -25% -10% auto -10%;
+  height: 130%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(48% 42% at 18% 22%, rgba(34, 211, 238, 0.24), transparent 62%),
+    radial-gradient(44% 40% at 82% 32%, rgba(139, 92, 246, 0.26), transparent 64%),
+    radial-gradient(40% 38% at 55% 88%, rgba(244, 114, 182, 0.16), transparent 62%);
+  filter: blur(28px);
+  animation: aurora 22s ease-in-out infinite alternate;
+}
+
+@keyframes aurora {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; }
+  50%  { transform: translate3d(-3%, 2%, 0) scale(1.08); opacity: 1; }
+  100% { transform: translate3d(3%, -2%, 0) scale(1.04); opacity: 0.9; }
+}
+
+/* Live indicator beside the eyebrow label. */
+.pulse-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--info);
+  margin-right: 7px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.65);
+  animation: pulse 2.2s infinite;
+}
+
 /* The globe canvas sits behind all hero content. */
 #hero-globe {
   position: absolute;
@@ -141,16 +178,24 @@ h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -0.02em; }
 }
 
 .hero-copy h1 {
-  font-size: clamp(38px, 5.4vw, 66px);
+  font-size: clamp(33px, 4.1vw, 53px);
   font-weight: 800;
   margin: 18px 0 20px;
+  text-wrap: balance;
 }
 
 .hero-copy h1 .grad {
-  background: linear-gradient(100deg, var(--accent), var(--accent-2) 70%);
+  background: linear-gradient(100deg, #67e8f9, var(--accent) 30%, var(--accent-2) 68%, var(--accent-3));
+  background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  animation: sheen 9s ease-in-out infinite;
+}
+
+@keyframes sheen {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
 }
 
 .hero-copy p.lede {
@@ -164,16 +209,16 @@ h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -0.02em; }
 .hero-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 34px;
+  gap: 30px;
   margin-top: 38px;
   padding-top: 28px;
   border-top: 1px solid var(--border);
 }
 .hero-stat .n {
-  font-size: 27px;
-  font-weight: 700;
+  font-size: 29px;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  background: linear-gradient(120deg, #7dd3fc, var(--accent) 45%, var(--accent-2));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -307,6 +352,60 @@ h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -0.02em; }
 .msg.show { display: block; }
 .msg.error { background: rgba(255, 59, 92, 0.12); border: 1px solid rgba(255, 59, 92, 0.4); color: #ffb3c0; }
 .msg.ok { background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.35); color: #a7f3c9; }
+
+/* ------------------------------------------------------ live status strip */
+
+.live-strip {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.07), rgba(139, 92, 246, 0.07));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+.live-strip .inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.live-strip .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  color: var(--text);
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.live-strip .agencies {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 88%, transparent);
+}
+.live-strip .agencies .track {
+  display: flex;
+  gap: 10px;
+  animation: marquee 42s linear infinite;
+  will-change: transform;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.live-strip .chip { background: rgba(255, 255, 255, 0.05); }
+
+@media (prefers-reduced-motion: reduce) {
+  .live-strip .agencies .track { animation: none; }
+}
 
 /* ------------------------------------------------------------- features */
 
