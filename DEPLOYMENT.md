@@ -1,6 +1,6 @@
 # Deployment
 
-Daily Regulatory is a single Node process with an embedded SQLite database. It
+Timely Regulatory is a single Node process with an embedded SQLite database. It
 has no external service dependencies — no Postgres, no Redis, no message queue.
 
 ## Before you deploy
@@ -29,8 +29,8 @@ NODE_ENV=production
 PORT=3000
 SESSION_SECRET=<64 random hex characters>
 COOKIE_SECURE=1
-DB_FILE=/var/lib/daily-regulatory/daily-regulatory.db
-FEED_USER_AGENT="DailyRegulatory/1.0 (+https://your-domain.example; ops@your-domain.example)"
+DB_FILE=/var/lib/timely-regulatory/timely-regulatory.db
+FEED_USER_AGENT="TimelyRegulatory/1.0 (+https://your-domain.example; ops@your-domain.example)"
 ADMIN_EMAIL=you@your-domain.example
 REQUIRE_APPROVAL=1
 ```
@@ -47,18 +47,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ```ini
 [Unit]
-Description=Daily Regulatory
+Description=Timely Regulatory
 After=network-online.target
 
 [Service]
 Type=simple
-User=daily-regulatory
-WorkingDirectory=/opt/daily-regulatory
-EnvironmentFile=/etc/daily-regulatory.env
+User=timely-regulatory
+WorkingDirectory=/opt/timely-regulatory
+EnvironmentFile=/etc/timely-regulatory.env
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=5
-StateDirectory=daily-regulatory
+StateDirectory=timely-regulatory
 
 [Install]
 WantedBy=multi-user.target
@@ -72,7 +72,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
-ENV NODE_ENV=production PORT=3000 DB_FILE=/data/daily-regulatory.db
+ENV NODE_ENV=production PORT=3000 DB_FILE=/data/timely-regulatory.db
 VOLUME /data
 EXPOSE 3000
 CMD ["node", "server.js"]
@@ -120,7 +120,7 @@ not all poll the same feeds:
 AUTO_INGEST=0 node server.js
 
 # every 15 minutes, one worker
-*/15 * * * * cd /opt/daily-regulatory && npm run ingest >> /var/log/dr-ingest.log 2>&1
+*/15 * * * * cd /opt/timely-regulatory && npm run ingest >> /var/log/dr-ingest.log 2>&1
 ```
 
 Note that SQLite expects one writer at a time; keep a single ingest job, and put
@@ -142,7 +142,7 @@ Back up the SQLite file. With the app running, use the online backup rather than
 copying the file directly:
 
 ```bash
-sqlite3 /var/lib/daily-regulatory/daily-regulatory.db ".backup '/backup/dr-$(date +%F).db'"
+sqlite3 /var/lib/timely-regulatory/timely-regulatory.db ".backup '/backup/dr-$(date +%F).db'"
 ```
 
 ## First administrator

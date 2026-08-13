@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My account — Timely Regulatory</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="app-bar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/>
+        </svg>
+      </span>
+      Timely Regulatory
+    </div>
+    <div class="who">
+      <a class="icon-btn" href="/app">← Back to the feed</a>
+      <span class="avatar" id="avatar" aria-hidden="true">–</span>
+      <span class="name" id="user-name">…</span>
+      <button class="icon-btn" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <h1 class="page-title">My account</h1>
+    <div class="msg" id="page-msg" role="alert"></div>
+
+    <div class="account-grid">
+
+      <!-- Identity -->
+      <section class="panel">
+        <div class="panel-head"><div><h3>Account details</h3><div class="sub">Who you are on this service</div></div></div>
+        <div class="panel-body">
+          <dl class="kv">
+            <dt>User name</dt><dd id="a-username">—</dd>
+            <dt>Full name</dt><dd id="a-name">—</dd>
+            <dt>Company name</dt><dd id="a-company">—</dd>
+            <dt>Country</dt><dd id="a-country">—</dd>
+            <dt>Registered email</dt><dd id="a-email">—</dd>
+            <dt>Last log-in</dt><dd id="a-lastlogin">—</dd>
+            <dt>This session since</dt><dd id="a-session">—</dd>
+            <dt>Member since</dt><dd id="a-since">—</dd>
+          </dl>
+          <button class="btn btn-ghost btn-sm" id="edit-profile-btn">Edit details</button>
+
+          <form id="profile-form" class="hidden" style="margin-top:16px">
+            <div class="grid-2-fields">
+              <div class="field"><label for="p-name">Full name</label><input id="p-name" type="text" required></div>
+              <div class="field"><label for="p-country">Country</label><input id="p-country" type="text"></div>
+            </div>
+            <div class="field"><label for="p-company">Company name</label><input id="p-company" type="text" required></div>
+            <button class="btn btn-sm" type="submit" id="p-submit">Save changes</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="p-cancel">Cancel</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Subscription -->
+      <section class="panel">
+        <div class="panel-head">
+          <div><h3>Subscription</h3><div class="sub">Your current plan and renewal</div></div>
+          <span class="tag" id="sub-standing">—</span>
+        </div>
+        <div class="panel-body">
+          <dl class="kv">
+            <dt>Plan</dt><dd id="s-plan">—</dd>
+            <dt>Status</dt><dd id="s-status">—</dd>
+            <dt>Subscribed since</dt><dd id="s-started">—</dd>
+            <dt>Last payment</dt><dd id="s-lastpaid">—</dd>
+            <dt>Next renewal due</dt><dd id="s-renews">—</dd>
+            <dt>Total paid to date</dt><dd id="s-total">—</dd>
+          </dl>
+
+          <div id="renewal-callout" class="banner hidden" style="margin:16px 0 0"></div>
+
+          <div style="margin-top:18px">
+            <a class="btn" id="topup-btn" href="#" target="_blank" rel="noopener noreferrer">
+              Top up / renew subscription
+            </a>
+            <p class="faint" id="topup-note" style="font-size:12px;margin:10px 0 0"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Payment history -->
+      <section class="panel">
+        <div class="panel-head"><div><h3>Payment history</h3><div class="sub">Receipts recorded against your account</div></div></div>
+        <div class="panel-body scroll-x">
+          <table class="data">
+            <thead><tr><th>Paid on</th><th>Amount</th><th>Method</th><th>Reference</th><th>Covers</th></tr></thead>
+            <tbody id="payment-rows"><tr><td colspan="5" class="faint">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Security -->
+      <section class="panel">
+        <div class="panel-head"><div><h3>Security</h3><div class="sub">Password and sign-in</div></div></div>
+        <div class="panel-body">
+          <p class="muted" style="font-size:13.3px;margin:0 0 16px;line-height:1.6">
+            Sign-in always requires a one-time passcode sent to your registered
+            email address, in addition to your password.
+          </p>
+          <form id="password-form">
+            <div class="field">
+              <label for="cp-current">Current password</label>
+              <input type="password" id="cp-current" autocomplete="current-password" required>
+            </div>
+            <div class="field">
+              <label for="cp-new">New password</label>
+              <input type="password" id="cp-new" autocomplete="new-password" required>
+              <div class="hint">At least 10 characters, including letters and numbers.</div>
+            </div>
+            <div class="field">
+              <label for="cp-confirm">Confirm new password</label>
+              <input type="password" id="cp-confirm" autocomplete="new-password" required>
+            </div>
+            <button class="btn" type="submit" id="cp-submit">Change password</button>
+          </form>
+          <p class="faint" style="font-size:12px;margin-top:12px" id="pw-changed"></p>
+        </div>
+      </section>
+
+      <!-- Feedback -->
+      <section class="panel account-wide">
+        <div class="panel-head"><div><h3>Feedback &amp; review</h3><div class="sub">Tell us what would make this more useful</div></div></div>
+        <div class="panel-body">
+          <form id="feedback-form">
+            <div class="field">
+              <label>Rating</label>
+              <div class="stars" id="stars" role="radiogroup" aria-label="Rating">
+                <button type="button" data-v="1" aria-label="1 star">★</button>
+                <button type="button" data-v="2" aria-label="2 stars">★</button>
+                <button type="button" data-v="3" aria-label="3 stars">★</button>
+                <button type="button" data-v="4" aria-label="4 stars">★</button>
+                <button type="button" data-v="5" aria-label="5 stars">★</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="fb-subject">Subject <span class="faint">(optional)</span></label>
+              <input type="text" id="fb-subject" maxlength="160">
+            </div>
+            <div class="field">
+              <label for="fb-message">Your feedback</label>
+              <textarea id="fb-message" rows="4" required
+                        placeholder="What works well, what is missing, which authorities you need next…"></textarea>
+            </div>
+            <button class="btn" type="submit" id="fb-submit">Send feedback</button>
+          </form>
+
+          <div id="feedback-history" style="margin-top:22px"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script type="module" src="/js/account.js"></script>
+</body>
+</html>

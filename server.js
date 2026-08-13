@@ -4,6 +4,7 @@ import { config, ROOT } from './server/config.js';
 import { db, syncSources, pruneEphemeral } from './server/db.js';
 import { loadSession, requireAuth } from './server/auth.js';
 import { authRouter } from './server/routes/auth.js';
+import { accountRouter } from './server/routes/account.js';
 import { updatesRouter } from './server/routes/updates.js';
 import { adminRouter } from './server/routes/admin.js';
 import { startScheduler, ingestState } from './server/ingest/scheduler.js';
@@ -101,6 +102,7 @@ app.get('/api/public/summary', (_req, res) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/account', accountRouter);
 app.use('/api', updatesRouter);
 
 // Operational detail is customer-visible but not public.
@@ -124,15 +126,43 @@ app.get('/api/status', requireAuth, (_req, res) => {
 
 // ------------------------------------------------------------------ pages
 
-// The dashboard shell is served only to a signed-in account, so the gated
+// Gated shells are served only to a signed-in account, so the private
 // experience is not merely hidden in the client.
-app.get('/app', requireAuthPage, (_req, res) => {
+app.get('/app', requireAuthPage('/app'), (_req, res) => {
   res.sendFile(path.join(ROOT, 'views', 'app.html'));
 });
 
-function requireAuthPage(req, res, next) {
-  if (!req.user || req.user.status !== 'active') return res.redirect('/?next=/app');
+app.get('/account', requireAuthPage('/account'), (_req, res) => {
+  res.sendFile(path.join(ROOT, 'views', 'account.html'));
+});
+
+// The administrator portal is a separate sign-in page on its own path.
+app.get('/admin', (req, res) => {
+  if (req.user?.role === 'admin') return res.redirect('/admin/dashboard');
+  res.sendFile(path.join(ROOT, 'views', 'admin-login.html'));
+});
+
+app.get('/admin/dashboard', (req, res, next) => {
+  if (req.user?.role !== 'admin' || req.user.status !== 'active') return res.redirect('/admin');
   next();
+}, (_req, res) => {
+  res.sendFile(path.join(ROOT, 'views', 'admin.html'));
+});
+
+// Password reset lands here from the emailed link.
+app.get('/reset', (_req, res) => {
+  res.sendFile(path.join(ROOT, 'views', 'reset.html'));
+});
+
+function requireAuthPage(next) {
+  return (req, res, proceed) => {
+    if (!req.user || req.user.status !== 'active') {
+      return res.redirect(`/?next=${encodeURIComponent(next)}`);
+    }
+    // Administrators belong in the administrator portal.
+    if (req.user.role === 'admin' && next !== '/app') return res.redirect('/admin/dashboard');
+    proceed();
+  };
 }
 
 // Public assets: the landing page, styles, client scripts and vendored
@@ -167,7 +197,7 @@ pruneEphemeral();
 
 const server = app.listen(config.port, config.host, () => {
   const { n: sources } = db.prepare('SELECT COUNT(*) AS n FROM sources').get();
-  console.log(`Daily Regulatory listening on http://${config.host}:${config.port}`);
+  console.log(`Timely Regulatory listening on http://${config.host}:${config.port}`);
   console.log(`Tracking ${sources} authority feeds.`);
   if (config.requireApproval) {
     console.log('New registrations require administrator approval (REQUIRE_APPROVAL=1).');

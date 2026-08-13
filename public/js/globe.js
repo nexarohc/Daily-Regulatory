@@ -1,5 +1,5 @@
 /**
- * Daily Regulatory - 3D regulatory intelligence globe.
+ * Timely Regulatory - 3D regulatory intelligence globe.
  *
  * Renders a dot-matrix Earth with an atmospheric rim, plots each health
  * authority as a marker coloured by the severity of its latest activity, and

@@ -1,9 +1,9 @@
-# Daily Regulatory
+# Timely Regulatory
 
 Global health-authority regulatory intelligence, aggregated from the
 authorities' own published feeds and served behind a registered-customer login.
 
-Daily Regulatory tracks **205 health authorities across 180 countries and
+Timely Regulatory tracks **205 health authorities across 180 countries and
 territories**, polls the **53 that publish a machine-readable feed** on a
 continuous cycle, normalises what they publish (recalls, safety alerts,
 approvals, guidance, enforcement, shortages), auto-tags each item by type and
@@ -79,6 +79,66 @@ as an administrator.
 
 ---
 
+## Two sign-in portals
+
+The service has **two separate sign-in systems**, and neither accepts the
+other's accounts.
+
+| | Subscriber portal | Administrator portal |
+| --- | --- | --- |
+| Sign-in page | `/` | `/admin` |
+| Home after sign-in | `/app` (the feed) | `/admin/dashboard` |
+| Credentials | username **or** email + password | username **or** email + password |
+| One-time passcode | required | required |
+| Who | pharmaceutical companies | the operator |
+
+A subscriber attempting the administrator portal is refused, and an
+administrator attempting the subscriber portal is told to use `/admin`. A
+passcode challenge is bound to the portal that raised it, so it cannot be
+completed at the other one.
+
+### Signing in takes two steps
+
+1. **Username and password.** A correct password on its own grants *no session*
+   — it only creates a short-lived challenge.
+2. **Passcode.** A six-digit single-use code is emailed to the registered
+   address and must be entered to receive a session. It expires after 10
+   minutes, allows 5 attempts, cannot be replayed, and is never returned
+   through the API.
+
+Subscribers can also **change their password** from the account page and
+**reset a forgotten password** by email. A reset revokes every existing session
+for that account, and both the emailed link and the passcode are single-use.
+
+> **Email is required.** Passcodes and reset links are delivered by SMTP.
+> Set `SMTP_HOST` and friends before onboarding anyone. Without it the app
+> falls back to writing the passcode into the server log so you can still get
+> in during setup, and the administrator dashboard shows a warning until SMTP
+> is configured.
+
+## Subscriber account
+
+`/account` shows each subscriber their user name, company, last log-in,
+subscription standing (trial, active, renewal due, expired), when they last
+paid and when the next renewal falls due, their payment history, a top-up link,
+and a feedback and review form.
+
+## Administrator dashboard
+
+`/admin/dashboard` shows how many subscribers there are, a country-by-country
+breakdown with revenue, the total amount received, and the subscribers who have
+not paid — those with no payment on record, a lapsed period, or a renewal
+falling due inside the warning window. It also lists every subscriber, carries
+subscriber feedback, and lets the operator record a payment or suspend an
+account.
+
+**On money:** the app keeps a ledger of payments *you record*; it does not
+process cards. `PAYMENT_URL` points the subscriber's "top up" button at
+whatever checkout you use (a Stripe payment link, an invoicing portal). Every
+figure on the dashboard is a sum of recorded receipts — nothing is estimated.
+Recording a payment rolls the renewal date forward, extending from the current
+expiry when the account is still in credit so paying early never loses time.
+
 ## Access control
 
 The regulatory feed is available only to registered accounts. Specifically:
@@ -113,7 +173,7 @@ Copy `.env.example` to `.env`, or set these in your process environment.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3000` | HTTP port |
-| `DB_FILE` | `data/daily-regulatory.db` | SQLite database location |
+| `DB_FILE` | `data/timely-regulatory.db` | SQLite database location |
 | `SESSION_SECRET` | random | Set in production so restarts do not rotate it |
 | `SESSION_TTL_HOURS` | `12` | Session lifetime |
 | `COOKIE_SECURE` | `0` | Set to `1` behind HTTPS |
@@ -137,11 +197,13 @@ server/
   config.js               Environment configuration
   db.js                   SQLite schema, migrations, retention
   auth.js                 Passwords, sessions, CSRF, rate limits, gates
+  mailer.js               SMTP delivery (console fallback when unconfigured)
   routes/
-    auth.js               register / login / logout / me
+    auth.js               two-portal sign-in, passcodes, reset, change password
+    account.js            subscriber profile, subscription, payments, feedback
     updates.js            feed, stats, authorities, filters, bookmarks,
                           live event stream (all gated)
-    admin.js              feed health, manual poll, user management (admin)
+    admin.js              dashboard, subscribers, payments, feedback, feed health
   ingest/
     sources.js            Registry: 53 live feeds + worldwide authority directory
     fetcher.js            Conditional HTTP GET, retries, storage
@@ -152,7 +214,8 @@ server/
     discover.js           Feed discovery for directory authorities
     seed.js               Labelled sample corpus
 public/                   Landing page, styles, client JS, vendored libraries
-views/app.html            Dashboard shell, served only to signed-in accounts
+views/                    Gated shells: feed, account, admin portal, admin
+                          dashboard, password reset
 ```
 
 **Live updates.** `GET /api/stream` is a gated server-sent event stream. Each

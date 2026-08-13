@@ -16,6 +16,23 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const dbFile = path.join(os.tmpdir(), `dr-test-${process.pid}.db`);
 
 let server;
+let output = '';
+
+/** Complete the two-step sign-in and return the session cookie. */
+async function signIn(identifier, password) {
+  const step1 = await post('/api/auth/login', { identifier, password });
+  if (step1.status !== 200) return { status: step1.status, cookie: null };
+
+  const body = await step1.json();
+  const code = [...output.matchAll(/passcode is: (\d{6})/g)].at(-1)?.[1];
+  const step2 = await post('/api/auth/verify', { challengeId: body.challengeId, code });
+  const verified = await step2.json();
+  return {
+    status: step2.status,
+    cookie: step2.headers.getSetCookie().join('; '),
+    csrfToken: verified.csrfToken,
+  };
+}
 
 before(async () => {
   server = spawn('node', ['server.js'], {
@@ -28,8 +45,10 @@ before(async () => {
       SEED_WHEN_EMPTY: '0',
       SESSION_SECRET: 'test-secret',
     },
-    stdio: 'ignore',
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
+  server.stdout.on('data', (chunk) => { output += chunk; });
+  server.stderr.on('data', (chunk) => { output += chunk; });
 
   // Wait for the listener to come up.
   const deadline = Date.now() + 20000;
@@ -95,85 +114,80 @@ test('health and public summary stay reachable without an account', async () => 
 
 test('registration validates input', async () => {
   const short = await post('/api/auth/register', {
-    email: 'a@b.co', name: 'A', password: 'short1',
+    email: 'a@b.co', name: 'A', company: 'C', username: 'shorty', password: 'short1',
   });
   assert.equal(short.status, 400);
 
   const noDigits = await post('/api/auth/register', {
-    email: 'a@b.co', name: 'A', password: 'onlylettershere',
+    email: 'a@b.co', name: 'A', company: 'C', username: 'nodigits', password: 'onlylettershere',
   });
   assert.equal(noDigits.status, 400);
 
   const badEmail = await post('/api/auth/register', {
-    email: 'not-an-email', name: 'A', password: 'validpass123',
+    email: 'not-an-email', name: 'A', company: 'C', username: 'bademail', password: 'validpass123',
   });
   assert.equal(badEmail.status, 400);
 });
 
-test('a registered customer can read the feed, and a wrong password cannot', async () => {
+test('a registered subscriber can read the feed, and a wrong password cannot', async () => {
   const registration = await post('/api/auth/register', {
     email: 'customer@example.com',
+    username: 'customer',
     name: 'Test Customer',
-    organisation: 'Example Ltd',
+    company: 'Example Ltd',
+    country: 'Ireland',
     password: 'validpass123',
   });
   assert.equal(registration.status, 201);
 
-  const cookie = registration.headers.getSetCookie().join('; ');
-  assert.match(cookie, /dr_session=/);
-  assert.match(cookie, /HttpOnly/i);
+  const session = await signIn('customer', 'validpass123');
+  assert.equal(session.status, 200);
+  assert.match(session.cookie, /tr_session=/);
+  assert.match(session.cookie, /HttpOnly/i);
 
-  const feed = await fetch(`${BASE}/api/updates`, { headers: { cookie } });
+  const feed = await fetch(`${BASE}/api/updates`, { headers: { cookie: session.cookie } });
   assert.equal(feed.status, 200);
   const body = await feed.json();
   assert.ok(Array.isArray(body.items));
 
   const wrong = await post('/api/auth/login', {
-    email: 'customer@example.com',
+    identifier: 'customer',
     password: 'wrongpassword1',
   });
   assert.equal(wrong.status, 401);
 });
 
-test('a customer cannot reach administrator endpoints', async () => {
-  const login = await post('/api/auth/login', {
-    email: 'customer@example.com',
-    password: 'validpass123',
+test('a subscriber cannot reach administrator endpoints', async () => {
+  const session = await signIn('customer', 'validpass123');
+  const response = await fetch(`${BASE}/api/admin/sources`, {
+    headers: { cookie: session.cookie },
   });
-  const cookie = login.headers.getSetCookie().join('; ');
-
-  const response = await fetch(`${BASE}/api/admin/sources`, { headers: { cookie } });
   assert.equal(response.status, 403);
 });
 
 test('state-changing requests require a CSRF token', async () => {
-  const login = await post('/api/auth/login', {
-    email: 'customer@example.com',
-    password: 'validpass123',
-  });
-  const cookie = login.headers.getSetCookie().join('; ');
-  const { csrfToken } = await login.json();
+  const session = await signIn('customer', 'validpass123');
 
   const without = await fetch(`${BASE}/api/auth/logout`, {
     method: 'POST',
-    headers: { cookie },
+    headers: { cookie: session.cookie },
   });
   assert.equal(without.status, 403);
 
   const withToken = await fetch(`${BASE}/api/auth/logout`, {
     method: 'POST',
-    headers: { cookie, 'x-csrf-token': csrfToken },
+    headers: { cookie: session.cookie, 'x-csrf-token': session.csrfToken },
   });
   assert.equal(withToken.status, 200);
 
   // The session must be dead after logout.
-  const after = await fetch(`${BASE}/api/updates`, { headers: { cookie } });
+  const after = await fetch(`${BASE}/api/updates`, { headers: { cookie: session.cookie } });
   assert.equal(after.status, 401);
 });
 
 test('a forged session cookie is rejected', async () => {
   const response = await fetch(`${BASE}/api/updates`, {
-    headers: { cookie: 'dr_session=totally-made-up-session-id' },
+    headers: { cookie: 'tr_session=totally-made-up-session-id' },
   });
   assert.equal(response.status, 401);
 });

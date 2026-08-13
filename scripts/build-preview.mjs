@@ -14,7 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const outFile = process.argv[2] || path.join(root, 'preview', 'daily-regulatory-preview.html');
+const outFile = process.argv[2] || path.join(root, 'preview', 'timely-regulatory-preview.html');
 
 // globe.js imports Three.js by absolute URL, which only resolves when served by
 // the app. Map it to the package for the bundle.
@@ -45,7 +45,7 @@ const html = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
 // from what the application actually serves.
 const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('</body>'));
 
-const preview = `<title>Daily Regulatory</title>
+const preview = `<title>Timely Regulatory</title>
 <style>
 ${css}
 
@@ -67,7 +67,7 @@ ${css}
 
 <div class="preview-note">
   <strong>Design preview.</strong>
-  Static snapshot of the Daily Regulatory landing page &mdash; the globe is live and
+  Static snapshot of the Timely Regulatory landing page &mdash; the globe is live and
   interactive (drag to rotate), but there is no server behind this page, so sign-in
   and registration are disabled here.
 </div>

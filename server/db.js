@@ -93,7 +93,101 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_login_attempts_key ON login_attempts(key, at);
+
+-- Two-step sign-in: a challenge is created once the password is accepted, and
+-- exchanged for a session only when the emailed passcode is verified.
+CREATE TABLE IF NOT EXISTS login_challenges (
+  id          TEXT    PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash   TEXT    NOT NULL,
+  portal      TEXT    NOT NULL DEFAULT 'subscriber',
+  attempts    INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT    NOT NULL,
+  expires_at  TEXT    NOT NULL,
+  consumed_at TEXT,
+  ip          TEXT,
+  user_agent  TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_challenges_expiry ON login_challenges(expires_at);
+
+-- Single-use password reset tokens.
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         TEXT    PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT    NOT NULL,
+  created_at TEXT    NOT NULL,
+  expires_at TEXT    NOT NULL,
+  used_at    TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_resets_expiry ON password_resets(expires_at);
+
+-- One subscription row per account, carrying the current billing period.
+CREATE TABLE IF NOT EXISTS subscriptions (
+  user_id        INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  plan           TEXT    NOT NULL DEFAULT 'standard',
+  status         TEXT    NOT NULL DEFAULT 'trial',
+  currency       TEXT    NOT NULL DEFAULT 'USD',
+  amount         REAL    NOT NULL DEFAULT 0,
+  started_at     TEXT,
+  last_paid_at   TEXT,
+  renews_at      TEXT,
+  seats          INTEGER NOT NULL DEFAULT 1,
+  notes          TEXT    NOT NULL DEFAULT ''
+);
+
+-- Payments the administrator has recorded against an account. This is a
+-- ledger of real receipts, not a card-processing integration.
+CREATE TABLE IF NOT EXISTS payments (
+  id          INTEGER PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount      REAL    NOT NULL,
+  currency    TEXT    NOT NULL DEFAULT 'USD',
+  method      TEXT    NOT NULL DEFAULT 'bank-transfer',
+  reference   TEXT    NOT NULL DEFAULT '',
+  period_from TEXT,
+  period_to   TEXT,
+  paid_at     TEXT    NOT NULL,
+  recorded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_paid ON payments(paid_at);
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id         INTEGER PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating     INTEGER,
+  subject    TEXT NOT NULL DEFAULT '',
+  message    TEXT NOT NULL,
+  status     TEXT NOT NULL DEFAULT 'new',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at);
 `);
+
+/**
+ * Additive migrations for databases created by an earlier version. SQLite has
+ * no "ADD COLUMN IF NOT EXISTS", so existing columns are read first.
+ */
+const userColumns = new Set(db.prepare('PRAGMA table_info(users)').all().map((c) => c.name));
+const addUserColumn = (name, definition) => {
+  if (!userColumns.has(name)) db.exec(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
+};
+
+addUserColumn('username', "TEXT NOT NULL DEFAULT ''");
+addUserColumn('company', "TEXT NOT NULL DEFAULT ''");
+addUserColumn('country', "TEXT NOT NULL DEFAULT ''");
+addUserColumn('previous_login_at', 'TEXT');
+addUserColumn('password_changed_at', 'TEXT');
+
+// Usernames must be unique, but only where set (legacy rows may be blank).
+db.exec(
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username
+     ON users(username) WHERE username != ''`,
+);
+
+// The customer role was renamed to subscriber.
+db.exec("UPDATE users SET role = 'subscriber' WHERE role = 'customer'");
 
 /**
  * Reconcile the sources table with the static registry. Metadata is owned by

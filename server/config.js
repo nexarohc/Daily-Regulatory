@@ -20,11 +20,11 @@ export const config = {
   port: int(process.env.PORT, 3000),
   host: process.env.HOST || '0.0.0.0',
 
-  dbFile: process.env.DB_FILE || path.join(ROOT, 'data', 'daily-regulatory.db'),
+  dbFile: process.env.DB_FILE || path.join(ROOT, 'data', 'timely-regulatory.db'),
 
   // Sessions are stored server-side; the cookie only carries an opaque id.
   sessionTtlMs: int(process.env.SESSION_TTL_HOURS, 12) * 60 * 60 * 1000,
-  cookieName: 'dr_session',
+  cookieName: 'tr_session',
   // Set COOKIE_SECURE=1 behind HTTPS in production.
   cookieSecure: bool(process.env.COOKIE_SECURE, false),
 
@@ -34,7 +34,7 @@ export const config = {
   fetchConcurrency: int(process.env.FETCH_CONCURRENCY, 6),
   userAgent:
     process.env.FEED_USER_AGENT ||
-    'DailyRegulatory/1.0 (+regulatory intelligence aggregator; contact: admin@example.com)',
+    'TimelyRegulatory/1.0 (+regulatory intelligence aggregator; contact: admin@example.com)',
   // Poll on boot, then on the interval. Disable for tests.
   autoIngest: bool(process.env.AUTO_INGEST, true),
   // When the network cannot reach any source (offline / restricted egress),
@@ -47,6 +47,36 @@ export const config = {
   requireApproval: bool(process.env.REQUIRE_APPROVAL, false),
   // First account to register with this email is promoted to admin.
   adminEmail: (process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
+
+  // Two-step sign-in. The emailed passcode is mandatory; it can only be
+  // disabled deliberately, for a deployment with no mail service at all.
+  requireLoginPasscode: bool(process.env.REQUIRE_LOGIN_PASSCODE, true),
+  passcodeLength: 6,
+  passcodeTtlMs: int(process.env.PASSCODE_TTL_MINUTES, 10) * 60 * 1000,
+  passcodeMaxAttempts: int(process.env.PASSCODE_MAX_ATTEMPTS, 5),
+  resetTtlMs: int(process.env.RESET_TTL_MINUTES, 60) * 60 * 1000,
+
+  // Public origin, used to build password-reset links in email.
+  publicUrl: (process.env.PUBLIC_URL || '').replace(/\/$/, ''),
+
+  smtp: {
+    host: process.env.SMTP_HOST || '',
+    port: int(process.env.SMTP_PORT, 587),
+    secure: bool(process.env.SMTP_SECURE, false),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.MAIL_FROM || 'Timely Regulatory <no-reply@example.com>',
+  },
+
+  // Subscriptions. The payment link points at whatever checkout the operator
+  // uses (Stripe payment link, invoice portal, and so on); the app records
+  // receipts but does not process cards itself.
+  paymentUrl: process.env.PAYMENT_URL || '',
+  currency: process.env.CURRENCY || 'USD',
+  defaultPlanAmount: Number(process.env.PLAN_AMOUNT || 0),
+  trialDays: int(process.env.TRIAL_DAYS, 14),
+  // Days before renewal that an account is flagged as due.
+  renewalWarningDays: int(process.env.RENEWAL_WARNING_DAYS, 14),
 };
 
 // A stable secret keeps sessions valid across restarts in development. In

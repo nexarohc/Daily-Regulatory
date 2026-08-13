@@ -130,7 +130,8 @@ function countUp(id, target) {
   requestAnimationFrame(step);
 }
 
-// The two tabs still switch, so both panels can be reviewed.
+// The two tabs still switch, so both panels can be reviewed. The passcode and
+// password-reset panels need a server, so they stay hidden in the preview.
 const tabSignin = document.getElementById('tab-signin');
 const tabRegister = document.getElementById('tab-register');
 const formSignin = document.getElementById('form-signin');

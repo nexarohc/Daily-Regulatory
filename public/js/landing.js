@@ -129,20 +129,44 @@ const tabSignin = document.getElementById('tab-signin');
 const tabRegister = document.getElementById('tab-register');
 const formSignin = document.getElementById('form-signin');
 const formRegister = document.getElementById('form-register');
+const formPasscode = document.getElementById('form-passcode');
+const formForgot = document.getElementById('form-forgot');
 const authTitle = document.getElementById('auth-title');
 
-function selectTab(which) {
-  const signin = which === 'signin';
-  tabSignin.setAttribute('aria-selected', String(signin));
-  tabRegister.setAttribute('aria-selected', String(!signin));
-  formSignin.classList.toggle('hidden', !signin);
-  formRegister.classList.toggle('hidden', signin);
-  authTitle.textContent = signin ? 'Customer access' : 'Create your account';
-  clearMessage();
+const PANELS = {
+  signin: formSignin,
+  register: formRegister,
+  passcode: formPasscode,
+  forgot: formForgot,
+};
+
+const TITLES = {
+  signin: 'Subscriber access',
+  register: 'Create your account',
+  passcode: 'Two-step verification',
+  forgot: 'Reset your password',
+};
+
+function showPanel(which, { keepMessage = false } = {}) {
+  for (const [name, el] of Object.entries(PANELS)) {
+    el?.classList.toggle('hidden', name !== which);
+  }
+  // The tab strip only reflects the two top-level choices.
+  const onSignin = which !== 'register';
+  tabSignin.setAttribute('aria-selected', String(onSignin));
+  tabRegister.setAttribute('aria-selected', String(!onSignin));
+  authTitle.textContent = TITLES[which];
+  if (!keepMessage) clearMessage();
 }
 
-tabSignin.addEventListener('click', () => selectTab('signin'));
-tabRegister.addEventListener('click', () => selectTab('register'));
+tabSignin.addEventListener('click', () => showPanel('signin'));
+tabRegister.addEventListener('click', () => showPanel('register'));
+document.getElementById('forgot-link')?.addEventListener('click', () => showPanel('forgot'));
+document.getElementById('fg-back')?.addEventListener('click', () => showPanel('signin'));
+document.getElementById('pc-back')?.addEventListener('click', () => {
+  challengeId = null;
+  showPanel('signin');
+});
 
 // -------------------------------------------------------------- messages
 
@@ -161,15 +185,67 @@ function clearMessage() {
 
 const nextUrl = new URLSearchParams(location.search).get('next') || '/app';
 
+// Holds the in-flight sign-in between the password and passcode steps.
+let challengeId = null;
+
 formSignin.addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = document.getElementById('si-submit');
-  await submit(button, 'Signing in…', async () => {
+  await submit(button, 'Checking…', async () => {
     const response = await postJson('/api/auth/login', {
-      email: document.getElementById('si-email').value.trim(),
+      identifier: document.getElementById('si-user').value.trim(),
       password: document.getElementById('si-password').value,
     });
-    location.href = nextUrl;
+
+    // With the passcode step disabled the session is issued immediately.
+    if (!response.passcodeRequired) {
+      location.href = response.home || nextUrl;
+      return response;
+    }
+
+    challengeId = response.challengeId;
+    document.getElementById('pc-target').textContent = response.sentTo;
+    document.getElementById('pc-expiry').textContent =
+      `Expires in ${response.expiresInMinutes} minutes.`;
+    showPanel('passcode');
+    document.getElementById('pc-code').focus();
+    return response;
+  });
+});
+
+formPasscode.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = document.getElementById('pc-submit');
+  await submit(button, 'Verifying…', async () => {
+    const response = await postJson('/api/auth/verify', {
+      challengeId,
+      code: document.getElementById('pc-code').value.trim(),
+    });
+    location.href = response.home || nextUrl;
+    return response;
+  });
+});
+
+document.getElementById('pc-resend')?.addEventListener('click', async () => {
+  try {
+    const response = await postJson('/api/auth/resend', { challengeId });
+    challengeId = response.challengeId;
+    document.getElementById('pc-code').value = '';
+    showMessage(`A new passcode has been sent to ${response.sentTo}.`, 'ok');
+  } catch (error) {
+    showMessage(error.message);
+  }
+});
+
+formForgot.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = document.getElementById('fg-submit');
+  await submit(button, 'Sending…', async () => {
+    const response = await postJson('/api/auth/forgot', {
+      identifier: document.getElementById('fg-user').value.trim(),
+    });
+    showPanel('signin', { keepMessage: true });
+    showMessage(response.message, 'ok');
     return response;
   });
 });
@@ -180,18 +256,20 @@ formRegister.addEventListener('submit', async (event) => {
   await submit(button, 'Creating account…', async () => {
     const response = await postJson('/api/auth/register', {
       name: document.getElementById('rg-name').value.trim(),
-      organisation: document.getElementById('rg-org').value.trim(),
+      company: document.getElementById('rg-company').value.trim(),
+      country: document.getElementById('rg-country').value.trim(),
+      username: document.getElementById('rg-username').value.trim(),
       email: document.getElementById('rg-email').value.trim(),
       password: document.getElementById('rg-password').value,
     });
 
-    // An account may need administrator approval before it can sign in.
-    if (response.pending) {
-      showMessage(response.message, 'ok');
-      selectTab('signin');
-      return response;
-    }
-    location.href = nextUrl;
+    showPanel('signin', { keepMessage: true });
+    showMessage(
+      response.message || 'Account created. Sign in with your username and password.',
+      'ok',
+    );
+    document.getElementById('si-user').value =
+      document.getElementById('rg-username').value.trim();
     return response;
   });
 });
@@ -223,11 +301,12 @@ async function postJson(url, body) {
   return data;
 }
 
-// If a session is already active, skip straight to the dashboard.
+// If a session is already active, skip straight to the right home page.
 fetch('/api/auth/me')
   .then((r) => (r.ok ? r.json() : null))
   .then((data) => {
-    if (data?.user?.status === 'active') location.href = nextUrl;
+    if (data?.user?.status !== 'active') return;
+    location.href = data.user.role === 'admin' ? '/admin/dashboard' : nextUrl;
   })
   .catch(() => {});
 

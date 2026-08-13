@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrator — Timely Regulatory</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="app-bar">
+    <div class="brand">
+      <span class="brand-mark admin-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </span>
+      Timely Regulatory <span class="admin-badge">Admin</span>
+    </div>
+    <div class="who">
+      <a class="icon-btn" href="/app">Regulatory feed</a>
+      <span class="avatar" id="avatar" aria-hidden="true">–</span>
+      <span class="name" id="user-name">…</span>
+      <button class="icon-btn" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <h1 class="page-title">Administrator dashboard</h1>
+    <div class="msg" id="page-msg" role="alert"></div>
+
+    <div class="banner hidden" id="mail-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+      </svg>
+      <div>
+        <strong>Email is not configured.</strong>
+        Sign-in passcodes are being written to the server log instead of sent.
+        Set <code>SMTP_HOST</code> and related variables before onboarding subscribers.
+      </div>
+    </div>
+
+    <!-- Headline figures -->
+    <section class="tiles">
+      <div class="tile"><div class="k">Total subscribers</div><div class="v" id="t-subs">—</div><div class="s" id="t-subs-sub">—</div></div>
+      <div class="tile"><div class="k">Total received</div><div class="v" id="t-revenue">—</div><div class="s" id="t-revenue-sub">across all payments</div></div>
+      <div class="tile crit"><div class="k">Awaiting payment</div><div class="v" id="t-unpaid">—</div><div class="s">never paid or overdue</div></div>
+      <div class="tile"><div class="k">New this month</div><div class="v" id="t-new">—</div><div class="s">last 30 days</div></div>
+    </section>
+
+    <div class="grid-2">
+      <!-- Country breakdown -->
+      <section class="panel">
+        <div class="panel-head">
+          <div><h3>Subscribers by country</h3><div class="sub" id="country-sub">—</div></div>
+        </div>
+        <div class="panel-body">
+          <div style="height:260px"><canvas id="country-chart"></canvas></div>
+          <div class="scroll-x" style="margin-top:16px;max-height:220px;overflow-y:auto">
+            <table class="data">
+              <thead><tr><th>Country</th><th>Subscribers</th><th>Received</th></tr></thead>
+              <tbody id="country-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Revenue -->
+      <section class="panel">
+        <div class="panel-head">
+          <div><h3>Payments received</h3><div class="sub">Recorded receipts, last 12 months</div></div>
+        </div>
+        <div class="panel-body">
+          <div style="height:260px"><canvas id="revenue-chart"></canvas></div>
+          <dl class="kv" style="margin-top:16px">
+            <dt>Total received</dt><dd id="r-total">—</dd>
+            <dt>Last 30 days</dt><dd id="r-30">—</dd>
+            <dt>Payments recorded</dt><dd id="r-count">—</dd>
+            <dt>Most recent</dt><dd id="r-latest">—</dd>
+          </dl>
+        </div>
+      </section>
+    </div>
+
+    <!-- Outstanding subscriptions -->
+    <section class="panel" style="margin-bottom:20px">
+      <div class="panel-head">
+        <div>
+          <h3>Subscribers who have not paid</h3>
+          <div class="sub">No payment on record, lapsed, or due within the warning window</div>
+        </div>
+      </div>
+      <div class="panel-body scroll-x">
+        <table class="data">
+          <thead>
+            <tr><th>Company</th><th>Contact</th><th>Country</th><th>Status</th>
+                <th>Renewal</th><th>Paid to date</th><th></th></tr>
+          </thead>
+          <tbody id="unpaid-rows"><tr><td colspan="7" class="faint">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- All subscribers -->
+    <section class="panel" style="margin-bottom:20px">
+      <div class="panel-head">
+        <div><h3>All subscribers</h3><div class="sub" id="subs-sub">—</div></div>
+        <input type="search" id="sub-search" placeholder="Search company, name or email…"
+               style="padding:8px 12px;background:rgba(6,10,20,.8);border:1px solid var(--border);
+                      border-radius:9px;color:var(--text);font-size:13px;min-width:240px">
+      </div>
+      <div class="panel-body scroll-x">
+        <table class="data">
+          <thead>
+            <tr><th>Company</th><th>User name</th><th>Country</th><th>Status</th>
+                <th>Joined</th><th>Last log-in</th><th>Paid</th><th></th></tr>
+          </thead>
+          <tbody id="sub-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Feedback -->
+    <section class="panel">
+      <div class="panel-head"><div><h3>Subscriber feedback</h3><div class="sub" id="fb-sub">—</div></div></div>
+      <div class="panel-body" id="fb-list"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Record payment dialog -->
+<dialog id="pay-dialog" class="dialog">
+  <form id="pay-form" method="dialog">
+    <h3 id="pay-title">Record a payment</h3>
+    <p class="faint" style="font-size:12.5px;margin:6px 0 16px">
+      Records a receipt you have already collected and rolls the renewal date forward.
+      This does not charge the customer.
+    </p>
+    <div class="grid-2-fields">
+      <div class="field"><label for="pay-amount">Amount</label><input id="pay-amount" type="number" min="0" step="0.01" required></div>
+      <div class="field"><label for="pay-currency">Currency</label><input id="pay-currency" type="text" maxlength="8"></div>
+    </div>
+    <div class="grid-2-fields">
+      <div class="field"><label for="pay-months">Months covered</label><input id="pay-months" type="number" min="1" max="60" value="12"></div>
+      <div class="field"><label for="pay-date">Paid on</label><input id="pay-date" type="date"></div>
+    </div>
+    <div class="grid-2-fields">
+      <div class="field"><label for="pay-method">Method</label><input id="pay-method" type="text" value="bank-transfer"></div>
+      <div class="field"><label for="pay-ref">Reference</label><input id="pay-ref" type="text"></div>
+    </div>
+    <div class="msg" id="pay-msg"></div>
+    <div class="row-between" style="margin-top:14px">
+      <button class="btn btn-ghost btn-sm" type="button" id="pay-cancel">Cancel</button>
+      <button class="btn btn-sm" type="button" id="pay-save">Record payment</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/vendor/chart.umd.js"></script>
+<script type="module" src="/js/admin.js"></script>
+</body>
+</html>

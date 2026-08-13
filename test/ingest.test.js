@@ -99,7 +99,7 @@ test('a cycle fetches, classifies and stores items from a live feed', async () =
 });
 
 test('identifies itself to the authority with a User-Agent', () => {
-  assert.match(lastHeaders['user-agent'] ?? '', /DailyRegulatory/);
+  assert.match(lastHeaders['user-agent'] ?? '', /TimelyRegulatory/);
 });
 
 test('re-polling an unchanged feed stores no duplicates', async () => {

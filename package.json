@@ -1,7 +1,7 @@
 {
-  "name": "daily-regulatory",
+  "name": "timely-regulatory",
   "version": "2.0.0",
-  "description": "Daily Regulatory - global health authority intelligence. Aggregates published regulatory feeds from national and international health authorities behind a registered-customer login.",
+  "description": "Timely Regulatory - global health authority intelligence. Aggregates published regulatory feeds from national and international health authorities behind a registered-customer login.",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "PMDA",
     "WHO"
   ],
-  "author": "Daily Regulatory",
+  "author": "Timely Regulatory",
   "license": "MIT",
   "engines": {
     "node": ">=22.5.0"
@@ -33,6 +33,7 @@
     "chart.js": "^4.4.6",
     "express": "^5.1.0",
     "fast-xml-parser": "^5.0.0",
+    "nodemailer": "^7.0.13",
     "three": "^0.180.0"
   },
   "devDependencies": {
