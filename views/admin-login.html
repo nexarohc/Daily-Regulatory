@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrator sign in — Timely Regulatory</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body class="portal-body">
+
+<main class="portal">
+  <div class="portal-card">
+    <div class="brand" style="justify-content:center;margin-bottom:6px">
+      <span class="brand-mark admin-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </span>
+      Timely Regulatory
+    </div>
+    <p class="portal-kicker">Administrator portal</p>
+
+    <div class="msg" id="auth-msg" role="alert"></div>
+
+    <!-- Step 1 -->
+    <form id="form-signin">
+      <div class="field">
+        <label for="ad-user">Administrator username or email</label>
+        <input type="text" id="ad-user" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="ad-password">Password</label>
+        <input type="password" id="ad-password" autocomplete="current-password" required>
+      </div>
+      <button class="btn block" type="submit" id="ad-submit">Continue</button>
+      <button type="button" class="linkish" id="forgot-link">Forgotten your password?</button>
+    </form>
+
+    <!-- Step 2 -->
+    <form id="form-passcode" class="hidden">
+      <div class="passcode-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>
+        </svg>
+        <div>
+          <div class="t">Enter your passcode</div>
+          <div class="d">Sent to <b id="pc-target">your address</b>.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="pc-code">One-time passcode</label>
+        <input type="text" id="pc-code" inputmode="numeric" autocomplete="one-time-code"
+               maxlength="6" class="code-input" placeholder="000000" required>
+        <div class="hint" id="pc-expiry">Expires in 10 minutes.</div>
+      </div>
+      <button class="btn block" type="submit" id="pc-submit">Verify and sign in</button>
+      <div class="row-between">
+        <button type="button" class="linkish" id="pc-resend">Send a new passcode</button>
+        <button type="button" class="linkish" id="pc-back">Start again</button>
+      </div>
+    </form>
+
+    <!-- Forgotten password -->
+    <form id="form-forgot" class="hidden">
+      <p class="muted" style="font-size:13.5px;margin:0 0 16px">
+        We will email a reset link to the registered administrator address.
+      </p>
+      <div class="field">
+        <label for="fg-user">Username or email</label>
+        <input type="text" id="fg-user" autocomplete="username" required>
+      </div>
+      <button class="btn block" type="submit" id="fg-submit">Send reset link</button>
+      <button type="button" class="linkish" id="fg-back">Back to sign in</button>
+    </form>
+
+    <p class="admin-hint">
+      Not an administrator? <a href="/">Subscriber sign in</a>.
+    </p>
+  </div>
+</main>
+
+<script type="module" src="/js/admin-login.js"></script>
+</body>
+</html>

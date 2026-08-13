@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timely Regulatory — Global Health Authority Intelligence</title>
+<meta name="description" content="Timely regulatory updates aggregated from health authority feeds worldwide. Recalls, safety alerts, approvals and guidance in one monitored feed, for registered subscribers.">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+
+<header class="hero">
+  <div id="hero-globe" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <nav class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/>
+          </svg>
+        </span>
+        Timely Regulatory
+      </div>
+      <a class="btn btn-ghost btn-sm" href="#access">Subscriber sign in</a>
+    </nav>
+  </div>
+
+  <div class="wrap hero-body">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="pulse-dot"></span> Global regulatory intelligence</p>
+      <h1><span class="grad">Live Update</span><br>from every Health Authority</h1>
+      <p class="lede">
+        Timely Regulatory continuously polls the published feeds of national and
+        international health authorities — recalls, safety alerts, approvals,
+        guidance and enforcement — and streams them into a single monitored
+        timeline, with the source always one click away.
+      </p>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="n" id="stat-authorities">—</div>
+          <div class="l">Authorities tracked</div>
+        </div>
+        <div class="hero-stat">
+          <div class="n" id="stat-countries">—</div>
+          <div class="l">Countries covered</div>
+        </div>
+        <div class="hero-stat">
+          <div class="n" id="stat-sources">—</div>
+          <div class="l">Live feeds</div>
+        </div>
+        <div class="hero-stat">
+          <div class="n" id="stat-interval">—</div>
+          <div class="l">Refresh cycle</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Access panel -->
+    <div class="auth-card" id="access">
+      <h2 id="auth-title">Subscriber access</h2>
+      <p class="muted" style="font-size:13.5px;margin:6px 0 0">
+        The regulatory feed is available to registered subscribers only.
+      </p>
+
+      <div class="lock-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+        </svg>
+        <span>Feed data is served only to an authenticated session — nothing is exposed publicly.</span>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab" id="tab-signin" role="tab" aria-selected="true" aria-controls="form-signin">Sign in</button>
+        <button class="tab" id="tab-register" role="tab" aria-selected="false" aria-controls="form-register">Register</button>
+      </div>
+
+      <div class="msg" id="auth-msg" role="alert"></div>
+
+      <!-- Step 1: credentials -->
+      <form id="form-signin" role="tabpanel" aria-labelledby="tab-signin">
+        <div class="field">
+          <label for="si-user">Username or work email</label>
+          <input type="text" id="si-user" name="username" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="si-password">Password</label>
+          <input type="password" id="si-password" name="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn block" type="submit" id="si-submit">Continue</button>
+        <button type="button" class="linkish" id="forgot-link">Forgotten your password?</button>
+      </form>
+
+      <!-- Step 2: emailed passcode -->
+      <form id="form-passcode" class="hidden">
+        <div class="passcode-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>
+          </svg>
+          <div>
+            <div class="t">Enter your passcode</div>
+            <div class="d">We emailed a one-time passcode to <b id="pc-target">your address</b>.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="pc-code">One-time passcode</label>
+          <input type="text" id="pc-code" inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" class="code-input" placeholder="000000" required>
+          <div class="hint" id="pc-expiry">Expires in 10 minutes.</div>
+        </div>
+        <button class="btn block" type="submit" id="pc-submit">Verify and sign in</button>
+        <div class="row-between">
+          <button type="button" class="linkish" id="pc-resend">Send a new passcode</button>
+          <button type="button" class="linkish" id="pc-back">Start again</button>
+        </div>
+      </form>
+
+      <!-- Forgotten password -->
+      <form id="form-forgot" class="hidden">
+        <p class="muted" style="font-size:13.5px;margin:0 0 16px">
+          Enter your username or registered email and we will send a reset link.
+        </p>
+        <div class="field">
+          <label for="fg-user">Username or email</label>
+          <input type="text" id="fg-user" autocomplete="username" required>
+        </div>
+        <button class="btn block" type="submit" id="fg-submit">Send reset link</button>
+        <button type="button" class="linkish" id="fg-back">Back to sign in</button>
+      </form>
+
+      <!-- Register -->
+      <form id="form-register" class="hidden" role="tabpanel" aria-labelledby="tab-register">
+        <div class="field">
+          <label for="rg-company">Company name</label>
+          <input type="text" id="rg-company" name="organization" autocomplete="organization" required>
+        </div>
+        <div class="grid-2-fields">
+          <div class="field">
+            <label for="rg-name">Full name</label>
+            <input type="text" id="rg-name" name="name" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="rg-country">Country</label>
+            <input type="text" id="rg-country" name="country" autocomplete="country-name">
+          </div>
+        </div>
+        <div class="field">
+          <label for="rg-username">Username</label>
+          <input type="text" id="rg-username" name="username" autocomplete="username" required>
+          <div class="hint">Letters, numbers, dots, hyphens and underscores.</div>
+        </div>
+        <div class="field">
+          <label for="rg-email">Work email</label>
+          <input type="email" id="rg-email" name="email" autocomplete="email" required>
+          <div class="hint">Sign-in passcodes are sent here, so it must be reachable.</div>
+        </div>
+        <div class="field">
+          <label for="rg-password">Password</label>
+          <input type="password" id="rg-password" name="password" autocomplete="new-password" required>
+          <div class="hint">At least 10 characters, including letters and numbers.</div>
+        </div>
+        <button class="btn block" type="submit" id="rg-submit">Create subscriber account</button>
+      </form>
+
+      <p class="admin-hint">
+        Administrator? <a href="/admin">Sign in at the administrator portal</a>.
+      </p>
+    </div>
+  </div>
+</header>
+
+<!-- Live status strip -->
+<section class="live-strip">
+  <div class="wrap inner">
+    <span class="label"><span class="pulse-dot"></span> Monitoring now</span>
+    <div class="agencies"><div class="track" id="ticker"></div></div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------ features -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">What it does</p>
+    <h2>Primary sources, continuously polled</h2>
+    <p class="muted" style="max-width:64ch;font-size:15.5px;line-height:1.65">
+      Every item in the feed comes from an authority's own publication feed and
+      links straight back to the original notice. Nothing is rewritten, and
+      nothing is invented.
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/></svg></div>
+        <h3>Worldwide coverage</h3>
+        <p>Authority feeds across North &amp; South America, Europe, Asia, Oceania, the Middle East, Africa and the international bodies (WHO, ICH, EDQM).</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M19.1 4.9l-2.9 2.9M7.8 16.2l-2.9 2.9"/></svg></div>
+        <h3>Continuous polling</h3>
+        <p>Each feed is re-checked on a fixed interval using conditional requests, so new notices surface quickly without hammering the authority's servers.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Triage at a glance</h3>
+        <p>Items are auto-tagged by type and severity — recalls, safety alerts, approvals, guidance, enforcement — so the urgent ones stand out. Always labelled as automatic.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+        <h3>Registered access only</h3>
+        <p>Server-side sessions, hashed credentials and CSRF protection. The feed API refuses every unauthenticated request.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div>
+        <h3>Feed health, visible</h3>
+        <p>Every source reports when it was last reached. A moved or broken endpoint shows up in the admin panel instead of silently going quiet.</p>
+      </div>
+      <div class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>Bookmarks &amp; filters</h3>
+        <p>Filter by region, authority, category, severity or free text, and keep a personal shortlist of notices worth tracking.</p>
+      </div>
+    </div>
+
+    <p class="eyebrow" style="margin-top:64px">Sources include</p>
+    <div class="authority-strip" id="authority-strip"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-row">
+    <div>
+      <div class="brand" style="font-size:15px;margin-bottom:8px">
+        <span class="brand-mark" style="width:26px;height:26px" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg>
+        </span>
+        Timely Regulatory
+      </div>
+      <div>Aggregated from public health-authority feeds. Always verify against the original notice.</div>
+    </div>
+    <div style="text-align:right">
+      <div>Not affiliated with any regulatory authority.</div>
+      <div style="margin-top:6px">Not legal or regulatory advice.</div>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="/js/landing.js"></script>
+</body>
+</html>
